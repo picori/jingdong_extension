@@ -6,7 +6,7 @@
 
 $(function(){
     $("nav a").click(function(){
-        $(".panel").removeClass("focus").eq($(this).index()).addClass("focus");
+        $(".panel").removeClass("focus").eq($(this).addClass("focus").siblings().removeClass("focus").end().index()).addClass("focus");
     });
 
     $("#submit_sign").click(function(){

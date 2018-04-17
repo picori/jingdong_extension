@@ -6,9 +6,11 @@
   		button {
   			margin-left:20px;
   		}
-  		.focus.panel {
-  			color:red,
-  			font-weight:bolder,
+      nav a.focus{
+        color:red;
+        font-weight:bolder;
+      }
+  		.panel.focus {  			
   			display:block;
   		}
   		.panel {
@@ -19,17 +21,17 @@
   <script src="js/jquery-3.3.1.min.js"></script>
   <body>
   	<nav>
-  		<a href="javascript:void(0);">关注</a>
-		<a href="javascript:void(0);">签到</a>
+  		<a href="javascript:void(0);" class="focus">关注</a>
+		  <a href="javascript:void(0);">签到</a>
   	</nav>
-  	<div class="panel">
+  	<div class="panel focus">
 	    <textarea style="width:300px;height:500px;" id="url_list" name="url_list"></textarea>
 	    <button id="submit_follow">提交</button><button id="clear_follow">清空</button><button id="process_follow">批量关注</button>
-	</div>
-	<div class="panel" style="display:none;">
-	    <textarea style="width:300px;height:500px;" id="url_list" name="url_list"></textarea>
-	    <button id="submit_sign">提交</button><button id="clear_sign">清空</button><button id="process_sign">批量签到</button>
-	</div>
+  	</div>
+  	<div class="panel">
+  	    <textarea style="width:300px;height:500px;" id="url_list" name="url_list"></textarea>
+  	    <button id="submit_sign">提交</button><button id="clear_sign">清空</button><button id="process_sign">批量签到</button>
+  	</div>
     <script src="popup.js"></script>
   </body>
 </html>
