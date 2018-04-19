@@ -11,6 +11,7 @@ $(function(){
 
     $("#submit_sign").click(function(){
         var list = $("#url_list").val().match(/https?:\/\/mall\.jd\.com\/index-\d+\.html/g);
+        
     });
 
 	$("#submit_follow").click(function(){
