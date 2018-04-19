@@ -9,9 +9,16 @@ $(function(){
         $(".panel").removeClass("focus").eq($(this).addClass("focus").siblings().removeClass("focus").end().index()).addClass("focus");
     });
 
-    $("#submit_sign").click(function(){
-        var list = $("#url_list").val().match(/https?:\/\/mall\.jd\.com\/index-\d+\.html/g);
-        
+    $("#process_sign").click(function(){
+        var list = $("#sign_list").val().match(/https?:\/\/mall\.jd\.com\/shopSign-\d+\.html/g);
+        $("#url_list").val("");        
+        chrome.runtime.sendMessage({"to":"background","from":"popup","work":"sign_all","params":list.map(function(url){return {url};})}, function(response) {
+            console.log('收到来自后台的回复：' + response);
+        });
+    });
+
+    $("#clear_sign").click(function(){                
+        $("#sign_list").val("");  
     });
 
 	$("#submit_follow").click(function(){
@@ -51,7 +58,7 @@ $(function(){
     
 
     $("#process_follow").click(function(){
-        $(this).attr("disabled","disabled");
+        //$(this).attr("disabled","disabled");
         chrome.runtime.sendMessage({"to":"background","from":"popup","work":"catch_all_beans"}, function(response) {
             console.log('收到来自后台的回复：' + response);
         });

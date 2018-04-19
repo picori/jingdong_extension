@@ -42,7 +42,7 @@ window.addEventListener("message", function(e)
 }, false);
 
 window.setTimeout(function(){
-  window.postMessage({"to":"background","work":"catch_beans"}, '*');
+  window.postMessage({"to":"background","work":"next"}, '*');
 },5000)
 
 var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;

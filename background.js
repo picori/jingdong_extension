@@ -41,9 +41,20 @@ chrome.webRequest.onBeforeRequest.addListener(
     });
   }, {urls:["*://f-mall.jd.com/shopGift/drawShopGiftInfo*"]});
 
+chrome.webRequest.onComplete.addListener(
+  function (e){
+    console.warn(e);
+    chrome.runtime.sendMessage(e.tabId, {"to":"background","work":"sign"}, function(response)
+    {
+      //console.warn(response);
+    });
+  }, {urls:["*://mall.jd.com/view/getShopSignStatus.html*"]});
+
 // 
 var list;
 var current_tab;
+var sign_list;
+var last_operaton = "";
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {
   function redirect(tabid,callback){
@@ -82,17 +93,48 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       callback();
     }    
   }
+  function sign(callback){
+    let current = (list||[]).shift();
+    if(!current){
+      list = undefined;
+      console.warn("All venders are signed!");
+      return callback && callback();
+    }
+    let {url} = current;
+    chrome.tabs.update(current_tab.id, {url},callback);
+  } 
+  function fetchSignList(sign_list,callback){
+    list = sign_list;
+    callback && callback();
+  }
   if(request["to"] == "background"){
-    if(request["work"] == "catch_all_beans"){
+    if(request["work"] == "next"){
+      request["work"] = last_operaton;
+    }
+    if(request["work"] == "catch_all_beans"){      
       createTab(function(){
         fetchDatas(function(){
           redirect(function(result){
+            last_operaton = "catch_beans";
             console.warn(result);
           });
         });
       });
     }else if(request["work"] == "catch_beans"){
       redirect(function(result){
+        console.warn(result);
+      });
+    }else if(request["work"] == "sign_all"){
+      fetchSignList(request["params"],function(){
+        createTab(function(){
+          sign(function(result){
+            last_operaton = "sign";
+            console.warn(result);
+          });
+        });
+      });
+    }else if(request["work"] == "sign"){
+      sign(function(result){
         console.warn(result);
       });
     }
