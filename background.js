@@ -41,7 +41,7 @@ chrome.webRequest.onBeforeRequest.addListener(
     });
   }, {urls:["*://f-mall.jd.com/shopGift/drawShopGiftInfo*"]});
 
-chrome.webRequest.onComplete.addListener(
+chrome.webRequest.onCompleted.addListener(
   function (e){
     console.warn(e);
     chrome.runtime.sendMessage(e.tabId, {"to":"background","work":"sign"}, function(response)
