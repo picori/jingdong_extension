@@ -41,20 +41,21 @@ chrome.webRequest.onBeforeRequest.addListener(
     });
   }, {urls:["*://f-mall.jd.com/shopGift/drawShopGiftInfo*"]});
 
-chrome.webRequest.onCompleted.addListener(
-  function (e){
-    console.warn(e);
-    chrome.runtime.sendMessage(e.tabId, {"to":"background","work":"sign"}, function(response)
-    {
-      //console.warn(response);
-    });
-  }, {urls:["*://mall.jd.com/view/getShopSignStatus.html*"]});
+// chrome.webRequest.onCompleted.addListener(
+//   function (e){
+//     console.warn(e);
+//     chrome.runtime.sendMessage(e.tabId, {"to":"background","work":"sign"}, function(response)
+//     {
+//       //console.warn(response);
+//     });
+//   }, {urls:["*://mall.jd.com/view/getShopSignStatus.html*"]});
 
 // 
 var list;
 var current_tab;
 var sign_list;
 var last_operaton = "";
+var counter = 0;
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {
   function redirect(tabid,callback){
@@ -108,14 +109,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     callback && callback();
   }
   if(request["to"] == "background"){
+    console.warn(request);
     if(request["work"] == "next"){
+      counter++;
+      console.warn("counter:\t"+counter);
       request["work"] = last_operaton;
     }
-    if(request["work"] == "catch_all_beans"){      
+    if(request["work"] == "catch_all_beans"){
+      last_operaton = "catch_beans";      
       createTab(function(){
         fetchDatas(function(){
-          redirect(function(result){
-            last_operaton = "catch_beans";
+          redirect(function(result){            
             console.warn(result);
           });
         });
@@ -125,10 +129,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         console.warn(result);
       });
     }else if(request["work"] == "sign_all"){
+      last_operaton = "sign";
       fetchSignList(request["params"],function(){
         createTab(function(){
-          sign(function(result){
-            last_operaton = "sign";
+          sign(function(result){            
             console.warn(result);
           });
         });

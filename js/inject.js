@@ -17,7 +17,7 @@ window.addEventListener("message", function(e)
           old_func(data);
         }else{
           console.warn(e.data,"There are no beans!");
-          window.postMessage({"to":"background","work":"catch_beans"}, '*');
+          window.postMessage({"to":"background","work":"next"}, '*');
         }
       };
       if(func){
@@ -28,7 +28,7 @@ window.addEventListener("message", function(e)
       let picori_jd_func = function(data){
         console.warn(e.data,data);
         old_func(data);
-        window.postMessage({"to":"background","work":"catch_beans"}, '*');
+        window.postMessage({"to":"background","work":"next"}, '*');
       };
       if(func){
         window[func] = picori_jd_func;
@@ -42,6 +42,7 @@ window.addEventListener("message", function(e)
 }, false);
 
 window.setTimeout(function(){
+  console.warn("Time out next!");
   window.postMessage({"to":"background","work":"next"}, '*');
 },5000)
 
