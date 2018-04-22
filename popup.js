@@ -5,68 +5,79 @@
 //'use strict';
 
 $(function(){
-    $("nav a").click(function(){
-        $(".panel").removeClass("focus").eq($(this).addClass("focus").siblings().removeClass("focus").end().index()).addClass("focus");
-    });
+  $("nav a").click(function(){
+    $(".panel").removeClass("focus").eq($(this).addClass("focus").siblings().removeClass("focus").end().index()).addClass("focus");
+  });
 
-    $("#process_sign").click(function(){
-        var list = $("#sign_list").val().match(/https?:\/\/mall\.jd\.com\/shopSign-\d+\.html/g);
-        $("#url_list").val("");        
-        chrome.runtime.sendMessage({"to":"background","from":"popup","work":"sign_all","params":list.map(function(url){return {url};})}, function(response) {
-            console.log('收到来自后台的回复：' + response);
+  $("#process_sign").click(function(){
+    var list = $("#sign_list").val().match(/https?:\/\/mall\.jd\.com\/shopSign-\d+\.html/g);
+    $("#url_list").val("");        
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"sign_all","params":list.map(function(url){return {url};})}, function(response) {
+      console.log('收到来自后台的回复：' + response);
+    });
+  });
+
+  $("#clear_sign").click(function(){                
+    $("#sign_list").val("");  
+  });
+
+  $("#save_follow").click(function(){
+    var list = $("#url_list").val().match(/https?:\/\/mall\.jd\.com\/index-\d+\.html/g);
+    $("#url_list").val(list.join("\n"));
+    function* saveToStorage(){
+      var line;
+      while((line = list.shift()) !== undefined){
+        yield new Promise(function(resolve,reject){
+          var match = line.match(/(https?:\/\/mall\.jd\.com\/index-(\d+)\.html)/);
+          function new_resolve(result){
+            resolve(result);
+          }
+          if(match){
+            let item = {};//{venderid:match[2] % 1000000000,url:match[1],beans:0,status:0};
+            chrome.storage.local.set({[match[2]]: item}, function() {
+              if( chrome.runtime.lastError ){
+                console.warn(chrome.runtime.lastError);
+                reject(chrome.runtime.lastError);
+              }else{
+                console.log(item);
+                new_resolve(match);
+              }                        
+            });
+          }else{
+            new_resolve(match);
+          }
         });
-    });
+      }
+    }
+    var generator = saveToStorage();
+    while(!generator.next().done){
 
-    $("#clear_sign").click(function(){                
-        $("#sign_list").val("");  
-    });
+    }    
+    console.warn("all url saved!");
+    $(this).removeAttr("disabled");
+  });
 
-	$("#submit_follow").click(function(){
-	  	var list = $("#url_list").val().match(/https?:\/\/mall\.jd\.com\/index-\d+\.html/g);
-		function* saveToStorage(){
-            var line;
-            while((line = list.shift()) !== undefined){
-    			yield new Promise(function(resolve,reject){
-    		        var match = line.match(/(https?:\/\/mall\.jd\.com\/index-(\d+)\.html)/);
-                    function new_resolve(result){
-                        $("#url_list").val(list.join("\n"));
-                        resolve(result);
-                    }
-                    if(match){
-                        let item = {venderid:match[2] % 1000000000,url:match[1],beans:0,status:0};
-                        chrome.storage.local.set({[item.venderid]: item}, function() {
-                            if( chrome.runtime.lastError ){
-                                console.warn(chrome.runtime.lastError);
-                                reject(chrome.runtime.lastError);
-                            }else{
-                                console.log(item);
-                                new_resolve(match);
-                            }                        
-                        });
-                    }else{
-                        new_resolve(match);
-                    }
-                });
-            }
-		}
-        var generator = saveToStorage();
-        while(!generator.next().done){
-            
-        }
-        $(this).removeAttr("disabled");
-	});
-    
+  $("#download_follow_storage").click(function(){
+    chrome.storage.local.get(null,function(results){
+      console.warn(results);
+      list = Object.keys(results).map(function(key){return {url:"https://mall.jd.com/index-" + key + ".html"}});//Object.values(results);
+      var csv = CSV.encode(list, { header: true });
+      var file = new File([csv], "follow_from_storage.csv", {type: "text/csv;charset=utf-8"});
+      saveAs(file);
+    });
+  })
 
-    $("#process_follow").click(function(){
-        //$(this).attr("disabled","disabled");
-        chrome.runtime.sendMessage({"to":"background","from":"popup","work":"catch_all_beans"}, function(response) {
-            console.log('收到来自后台的回复：' + response);
-        });
+
+  $("#process_follow_storage").click(function(){
+    //$(this).attr("disabled","disabled");
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"catch_all_beans"}, function(response) {
+      console.log('收到来自后台的回复：' + response);
     });
-    $("#clear_follow").click(function(){                
-        chrome.storage.local.clear(function(){
-            console.warn("all datas are cleared");
-            $(this).removeAttr("disabled");
-        });
+  });
+  $("#clear_follow_storage").click(function(){                
+    chrome.storage.local.clear(function(){
+      console.warn("all datas are cleared");
+      $(this).removeAttr("disabled");
     });
+  });
 });

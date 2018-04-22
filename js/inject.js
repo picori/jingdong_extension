@@ -14,6 +14,7 @@ window.addEventListener("message", function(e)
       let picori_jd_func = function(data){
         if(data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
           console.warn(e.data,"There are beans!");
+          window.postMessage({"to":"background","work":"log_catch_beans"}, '*');
           old_func(data);
         }else{
           console.warn(e.data,"There are no beans!");
@@ -41,19 +42,32 @@ window.addEventListener("message", function(e)
   }
 }, false);
 
-window.setTimeout(function(){
+// window.setTimeout(function(){
+//   console.warn("Time out next!");
+//   window.postMessage({"to":"background","work":"next"}, '*');
+// },5000)
+
+if(!window.location.href.match(/https?:\/\/mall.jd/)){
   console.warn("Time out next!");
   window.postMessage({"to":"background","work":"next"}, '*');
-},5000)
+}
 
 var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
 var target = document.querySelector('body');
 
 var observer = new MutationObserver(function(mutations) {
   if($('.J_drawGift') && $('.J_drawGift').is(":visible")){
-    observer.disconnect();
-    $('.J_drawGift').click();    
-    //window.postMessage({"to":"background","work":"catch_beans"}, '*');
+    //observer.disconnect();
+    var bean_gifts = $('.J_giftModal .J_prizeList div:contains(京豆)');
+    if(bean_gifts.size()){
+      console.warn("has beans:\t",bean_gifts.find("p.d-num").html());
+      $('.J_drawGift').click();  
+    }else{
+      console.warn("no beans",bean_gifts);
+      window.postMessage({"to":"background","work":"catch_beans"}, '*');
+    }      
+  }else if($(".J_giftclose").is(":visible")){
+    window.postMessage({"to":"background","work":"next"}, '*');
   }         
 });
 

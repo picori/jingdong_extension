@@ -26,12 +26,14 @@
   	</nav>
   	<div class="panel focus">
 	    <textarea style="width:300px;height:500px;" id="url_list" name="url_list"></textarea>
-	    <button id="submit_follow">提交</button><button id="clear_follow">清空</button><button id="process_follow">批量关注</button>
+	    <button id="clear_follow">清空表单</button><button id="process_follow">关注</button><button id="download_follow">下载</button></br><button id="save_follow">保存</button><button id="clear_follow_storage">清空数据库</button><button id="process_follow_storage">数据库关注</button><button id="download_follow_storage">从数据库下载</button>
   	</div>
   	<div class="panel">
   	    <textarea style="width:300px;height:500px;" id="sign_list" name="sign_list"></textarea>
-  	    <button id="submit_sign">提交</button><button id="clear_sign">清空</button><button id="process_sign">批量签到</button>
+  	    <button id="save_sign">保存</button><button id="download_sign">下载</button><button id="clear_sign">清空</button><button id="process_sign">签到</button><button id="process_sign_storage">从数据库签到</button>
   	</div>
-    <script src="popup.js"></script>
+    <script src="js/csv.js"></script>
+    <script src="js/FileSaver.js"></script>
+    <script src="popup.js"></script>    
   </body>
 </html>
