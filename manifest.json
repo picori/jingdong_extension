@@ -4,7 +4,7 @@
   "description": "Picori's Extension for Jingdong Login",
   "permissions": ["background","storage","contextMenus","tabs","webNavigation","webRequest","*://*.jd.com/*","*://*.jd.hk/*","webRequestBlocking"],
   "options_page": "options.html",
-  "web_accessible_resources": ["js/inject.js"],
+  "web_accessible_resources": ["js/inject.js","js/hack.js"],
   "content_scripts": 
   [
     {

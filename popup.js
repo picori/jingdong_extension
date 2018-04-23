@@ -39,7 +39,6 @@ $(function(){
                 console.warn(chrome.runtime.lastError);
                 reject(chrome.runtime.lastError);
               }else{
-                console.log(item);
                 new_resolve(match);
               }                        
             });
@@ -60,13 +59,22 @@ $(function(){
   $("#download_follow_storage").click(function(){
     chrome.storage.local.get(null,function(results){
       console.warn(results);
-      list = Object.keys(results).map(function(key){return {url:"https://mall.jd.com/index-" + key + ".html"}});//Object.values(results);
+      list = Object.keys(results).map(function(key){return {venderId:key,shopId:results[key]["shopId"],url:"https://mall.jd.com/index-" + results[key]["shopId"] + ".html"}});//Object.values(results);
       var csv = CSV.encode(list, { header: true });
       var file = new File([csv], "follow_from_storage.csv", {type: "text/csv;charset=utf-8"});
       saveAs(file);
     });
   })
 
+  $("#process_follow").click(function(){
+    var list = $("#url_list").val().match(/(https?:\/\/mall\.jd\.(com|hk)\/index-\d+\.html)|(https?:\/\/([^\.])+\.jd.(com|hk))/g)
+    .filter(function(url){return !url.match(/^https?:\/\/mall\.jd\.(com|hk)\/?$/)});
+    $("#url_list").val(list.join("\n"));
+    //$(this).attr("disabled","disabled");
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"catch_all_beans","list":list}, function(response) {
+      console.log('收到来自后台的回复：' + response);
+    });
+  });
 
   $("#process_follow_storage").click(function(){
     //$(this).attr("disabled","disabled");
@@ -78,6 +86,12 @@ $(function(){
     chrome.storage.local.clear(function(){
       console.warn("all datas are cleared");
       $(this).removeAttr("disabled");
+    });
+  });
+
+  $("#clear_localstorage").click(function(){
+    chrome.runtime.sendMessage({"to":"content","from":"popup","work":"clear_localstorage"}, function(response) {
+      console.log('收到来自后台的回复：' + response);
     });
   });
 });

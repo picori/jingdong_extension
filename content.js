@@ -21,6 +21,7 @@ function injectCustomJs(jsPath)
 }
 
 injectCustomJs();
+injectCustomJs('js/hack.js');
 
 // window.addEventListener("message", function(e)
 // {
@@ -35,6 +36,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     if(request.to == "inject"){
         //console.warn(request.work);
         window.postMessage(request, '*');
+    }else if(request.to == "content"){
+      console.warn(request);
+      if(request.work == "clear_localstorage"){
+        let i = 0,key;
+        while(key = window.localStorage.key(i++)){
+          console.warn(key);
+          key.match("/^giftpicori(\d+)/") && window.localStorage.removeItem(key);
+        }
+      }
     }
 });
 
