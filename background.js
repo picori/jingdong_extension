@@ -82,7 +82,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           callback(current_tab=tab);
         });
       }else{
-        console.warn("Use tab index 0");
+        //console.warn("Use tab index 0");
         callback(current_tab=tabs[0]);
       }
     });
@@ -113,15 +113,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     callback && callback();
   }
   if(request["to"] == "background"){
-    console.warn(request);
     if(request["work"] == "next"){
       let result = request["result"]||{"venderId":0,"shopId":0,"beans":0};
       counter++;
       //console.warn("counter:\t"+counter,result);
       request["work"] = last_operaton;
       beans += result["beans"];
-      if(result.venderId){
-        chrome.storage.local.set({[result.venderId]:result},function(results){
+      if(result.shopId){
+        chrome.storage.local.set({[result.shopId]:result},function(results){
           
         });
       }      

@@ -49,7 +49,10 @@ window.addEventListener("message", function(e)
 //   },5000)
 // });
 
-if(window.location.href.match(/https?:\/\/www\.jd\.com\/error2\.aspx/)){
+if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/){}
+  console.warn("ShopSigned!");
+  window.postMessage({"to":"background","work":"next"}, '*');
+}else if(window.location.href.match(/https?:\/\/www\.jd\.com/)){
   console.warn("Wrong URL!");
   window.postMessage({"to":"background","work":"next"}, '*');
 }else{

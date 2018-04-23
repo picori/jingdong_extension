@@ -229,6 +229,9 @@ var INTERFACE = {
         }
     }
 };
+if(!seajs){
+    window.postMessage({"to":"background","work":"next"}, '*');
+}
 seajs.config({
     alias: {
         'login': '//misc.360buyimg.com/jdf/1.0.0/unit/login/1.0.0/login.js'

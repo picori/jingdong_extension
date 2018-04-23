@@ -21,6 +21,10 @@ $(function(){
     $("#sign_list").val("");  
   });
 
+  $("#clear_follow").click(function(){
+    $("#url_list").val("");
+  })
+
   $("#save_follow").click(function(){
     var list = $("#url_list").val().match(/https?:\/\/mall\.jd\.com\/index-\d+\.html/g);
     $("#url_list").val(list.join("\n"));
