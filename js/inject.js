@@ -4,43 +4,43 @@
 
 'use strict';
 
-window.addEventListener("message", function(e)
-{
-  //console.log(e.data);
-  let func = e.data.function;
-  if(e.data.to == "inject"){
-    if(e.data.work == "getShopGiftInfo"){
-      // let old_func = window[func];
-      // let picori_jd_func = function(data){
-      //   if(data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
-      //     console.warn(e.data,"There are beans!");
-      //     //window.postMessage({"to":"background","work":"log_catch_beans"}, '*');
-      //     old_func(data);
-      //   }else{
-      //     console.warn(e.data,"There are no beans!");
-      //     window.postMessage({"to":"background","work":"next"}, '*');
-      //   }
-      // };
-      // if(func){
-      //   window[func] = picori_jd_func;
-      // }
-    }else if(e.data.work == "drawShopGiftInfo"){
-      // let old_func = window[func];
-      // let picori_jd_func = function(data){
-      //   console.warn(e.data,data);
-      //   old_func(data);
-      //   //window.postMessage({"to":"background","work":"next"}, '*');
-      // };
-      // if(func){
-      //   window[func] = picori_jd_func;
-      // }
-    }else if(e.data.work == "redirect"){
-      window.location.href = e.data.url;
-    }else{
-      console.warn("Why am I here?");
-    }
-  }
-}, false);
+// window.addEventListener("message", function(e)
+// {
+//   //console.log(e.data);
+//   let func = e.data.function;
+//   if(e.data.to == "inject"){
+//     if(e.data.work == "getShopGiftInfo"){
+//       let old_func = window[func];
+//       let picori_jd_func = function(data){
+//         if(data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
+//           console.warn(e.data,"There are beans!");
+//           //window.postMessage({"to":"background","work":"log_catch_beans"}, '*');
+//           old_func(data);
+//         }else{
+//           console.warn(e.data,"There are no beans!");
+//           window.postMessage({"to":"background","work":"next"}, '*');
+//         }
+//       };
+//       if(func){
+//         window[func] = picori_jd_func;
+//       }
+//     }else if(e.data.work == "drawShopGiftInfo"){
+//       let old_func = window[func];
+//       let picori_jd_func = function(data){
+//         console.warn(e.data,data);
+//         old_func(data);
+//         //window.postMessage({"to":"background","work":"next"}, '*');
+//       };
+//       if(func){
+//         window[func] = picori_jd_func;
+//       }
+//     }else if(e.data.work == "redirect"){
+//       window.location.href = e.data.url;
+//     }else{
+//       console.warn("Why am I here?");
+//     }
+//   }
+// }, false);
 
 // $(function(){
 //   window.setTimeout(function(){
@@ -49,9 +49,9 @@ window.addEventListener("message", function(e)
 //   },5000)
 // });
 
-if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/){}
+if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)){
   console.warn("ShopSigned!");
-  window.postMessage({"to":"background","work":"next"}, '*');
+  window.postMessage({"to":"background","work":"next","result":{"venderId": $("#vender_id").val(),"beans":0,"shopId":$("#shop_id").val()}}, '*');
 }else if(window.location.href.match(/https?:\/\/www\.jd\.com/)){
   console.warn("Wrong URL!");
   window.postMessage({"to":"background","work":"next"}, '*');

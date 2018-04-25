@@ -102,7 +102,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     let current = (list||[]).shift();
     if(!current){
       list = undefined;
+      console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
       console.warn("All venders are signed!");
+      reset_summary();
       return callback && callback();
     }
     let {url} = current;
@@ -120,13 +122,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       request["work"] = last_operaton;
       beans += result["beans"];
       if(result.shopId){
-        chrome.storage.local.set({[result.shopId]:result},function(results){
+        if(result["beans"]){
+          console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
+        }
+        chrome.storage.local.set({[last_operaton + result.shopId]:result},function(results){
           
         });
       }      
     }
-    if(request["work"] == "catch_all_beans"){
-      last_operaton = "catch_beans";      
+    if(request["work"] == "start_follow"){
+      last_operaton = "follow";      
       fetchDatas(request["list"],function(){
         fetchTab(function(){
           follow(function(result){            
@@ -134,24 +139,26 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           });
         })
       });
-    }else if(request["work"] == "catch_beans"){
+    }else if(request["work"] == "follow"){
       fetchTab(function(tab){
         follow(function(result){            
           //console.warn(result);
         });
       });
-    }else if(request["work"] == "sign_all"){
+    }else if(request["work"] == "start_sign"){
       last_operaton = "sign";
-      fetchSignList(request["params"],function(){
-        createTab(function(){
+      fetchSignList(request["list"],function(){
+        fetchTab(function(){
           sign(function(result){            
             //console.warn(result);
           });
         });
       });
     }else if(request["work"] == "sign"){
-      sign(function(result){
-        //console.warn(result);
+      fetchTab(function(){
+        sign(function(result){
+          //console.warn(result);
+        });
       });
     }
   }

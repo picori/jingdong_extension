@@ -11,8 +11,8 @@ $(function(){
 
   $("#process_sign").click(function(){
     var list = $("#sign_list").val().match(/https?:\/\/mall\.jd\.com\/shopSign-\d+\.html/g);
-    $("#url_list").val("");        
-    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"sign_all","params":list.map(function(url){return {url};})}, function(response) {
+    $("#sign_list").val("");        
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_sign","list":list.map(function(url){return {url};})}, function(response) {
       console.log('收到来自后台的回复：' + response);
     });
   });
@@ -63,7 +63,7 @@ $(function(){
   $("#download_follow_storage").click(function(){
     chrome.storage.local.get(null,function(results){
       console.warn(results);
-      list = Object.keys(results).map(function(key){return {venderId:key,shopId:results[key]["shopId"],url:"https://mall.jd.com/index-" + results[key]["shopId"] + ".html"}});//Object.values(results);
+      list = Object.keys(results).filter(function(key){return /follow\d+/.test(key)}).map(function(key){return {venderId:results[key]["venderId"],shopId:results[key]["shopId"],url:"https://mall.jd.com/index-" + results[key]["shopId"] + ".html"}});//Object.values(results);
       var csv = CSV.encode(list, { header: true });
       var file = new File([csv], "follow_from_storage.csv", {type: "text/csv;charset=utf-8"});
       saveAs(file);
@@ -71,25 +71,27 @@ $(function(){
   })
 
   $("#process_follow").click(function(){
-    var list = $("#url_list").val().match(/(https?:\/\/mall\.jd\.(com|hk)\/index-\d+\.html)|(https?:\/\/([^\.])+\.jd.(com|hk))/g)
+    var list = ($("#url_list").val().match(/(https?:\/\/mall\.jd\.(com|hk)\/index-\d+\.html)|(https?:\/\/([^\.])+\.jd.(com|hk))/g)||[])
     .filter(function(url){return !url.match(/^https?:\/\/mall\.jd\.(com|hk)\/?$/)});
     $("#url_list").val(list.join("\n"));
     //$(this).attr("disabled","disabled");
-    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"catch_all_beans","list":list}, function(response) {
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow","list":list}, function(response) {
       console.log('收到来自后台的回复：' + response);
     });
   });
 
   $("#process_follow_storage").click(function(){
     //$(this).attr("disabled","disabled");
-    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"catch_all_beans"}, function(response) {
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow"}, function(response) {
       console.log('收到来自后台的回复：' + response);
     });
   });
-  $("#clear_follow_storage").click(function(){                
-    chrome.storage.local.clear(function(){
+  $("#clear_follow_storage").click(function(){     
+    chrome.storage.local.get(null,function(results){
       console.warn("all datas are cleared");
-      $(this).removeAttr("disabled");
+      results.foreach(function(item){
+        chrome.storage.local.remove(item);
+      });
     });
   });
 
