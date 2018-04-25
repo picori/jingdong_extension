@@ -21,7 +21,7 @@ function injectCustomJs(jsPath)
 }
 
 injectCustomJs();
-injectCustomJs('js/hack.js');
+injectCustomJs('js/follow.js');
 
 // window.addEventListener("message", function(e)
 // {

@@ -43,10 +43,23 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (e){
 
 chrome.webRequest.onBeforeRequest.addListener(
   function(details) {
-    return {cancel: details.url.indexOf("https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207") != -1};
+    return {cancel: true};
+  },
+  {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207"]},
+  ["blocking"]);
+
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function(details) {
+    //console.warn(details.requestHeaders);
+    for (var i = 0; i < details.requestHeaders.length; ++i) {
+      if (details.requestHeaders[i].name === 'Referer' && details.requestHeaders[i].value.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)) {
+        return {cancel: true};
+      }
+    }
+    return {cancel: false};;
   },
   {urls: ["<all_urls>"]},
-  ["blocking"]);
+  ["blocking","requestHeaders"]);
 
 // 
 var list;
@@ -61,6 +74,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     beans = 0;
     counter = 0;
     last_operaton = "";
+    sign_list = undefined;
+    list = undefined;
   }
   function follow(callback){
       let url = (list||[]).shift();
@@ -163,3 +178,50 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     }
   }
 });  
+
+
+// function schedule(){  
+//   var timers = schedule.timers = schedule.timers || {};
+//   console.warn(new Date().getTime(),"schedule");
+//   setTimeout(schedule,60 * 1000 - new Date().getTime() % 60 * 1000);
+//   chrome.storage.local.get(null,function(results){
+//     Object.keys(results).filter(function(key){return /coupon_\d+/.test(key)}).forEach(function(key){
+//       var offset; 
+//       if((offset=results[key]["start_time"] - new Date().getTime()) <= 60){
+//         console.warn(new Date(),key);
+//         timers[key] = setTimeout(function(){
+//           console.warn(new Date(),"eval " + key );
+//           eval(results[key]["script"]);
+//         },offset);
+//       } 
+//     });
+//   }); 
+// }
+
+(function schedule(){
+  var now;
+  var timers = {};
+  chrome.alarms.onAlarm.addListener(function(alarm){
+    console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
+    chrome.storage.sync.get(null,function(results){
+      Object.keys(results).filter(function(key){return /^coupon_/.test(key)}).forEach(function(key){
+        var offset; 
+        console.warn(results[key]["start_time"] - new Date().getTime())
+        if((offset=results[key]["start_time"] - new Date().getTime()) <= 60 * 1000){
+          console.warn(new Date().getTime(),key);
+          timers[key] = setTimeout(function(){
+            console.warn(new Date().getTime(),"eval " + key );
+            eval(results[key]["script"]);
+          },offset);
+        } 
+      });
+    });
+  });
+  chrome.alarms.create("schedule", {
+    when : 60 * 1000 - (now = new Date().getTime()) % 60000 + now ,
+    periodInMinutes : 1
+  })
+})()
+
+
+

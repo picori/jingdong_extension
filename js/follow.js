@@ -1,3 +1,4 @@
+//https://static.360buyimg.com/static-shop-sale-p/js/common-business/??INTERFACE.js,login.js,follow.mall.js,getMallHeader.js,other.js?t=20161207
 var SLD = {
     followSoa: '//follow-soa.jd.com',
     p: '//p.3.cn',

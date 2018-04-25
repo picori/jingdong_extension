@@ -23,6 +23,7 @@
   	<nav>
   		<a href="#" class="focus">关注</a>
 		  <a href="#">签到</a>
+      <a href="#">券</a>
   	</nav>
   	<div class="panel focus">
 	    <textarea style="width:300px;height:500px;" id="url_list" name="url_list"></textarea>
@@ -32,6 +33,12 @@
   	    <textarea style="width:300px;height:500px;" id="sign_list" name="sign_list"></textarea>
   	    <div><button id="clear_sign">清空</button><button id="process_sign">签到</button><button id="process_sign_storage">数据库签到</button><button id="download_sign">下载</button></div>
   	</div>
+    <div class="panel">
+        <textarea style="width:400px;height:300px;" id="coupon_script" name="coupon_script"></textarea>
+        <span>key</span><input type="text" id="coupon_key" /></br>
+        <input type="text" id="coupon_year" size=2 /><span>年</span><input type="text" id="coupon_month" size=1 /><span>月</span><input type="text" id="coupon_day" size=1 /><span>日</span><input type="text" id="coupon_hour" size=1 /><span>时</span><input type="text" id="coupon_minute" size=1 /><span>分</span><input type="text" id="coupon_second" size=1 /><span>秒</span>
+        <div><button id="add_coupon">添加</button></div>
+    </div>
     <script src="js/csv.js"></script>
     <script src="js/FileSaver.js"></script>
     <script src="popup.js"></script>    

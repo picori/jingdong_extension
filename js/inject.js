@@ -42,19 +42,23 @@
 //   }
 // }, false);
 
-// $(function(){
-//   window.setTimeout(function(){
-//     console.warn("Time out next!");
-//     window.postMessage({"to":"background","work":"timeout"}, '*');
-//   },5000)
-// });
+$(function(){
+  window.setTimeout(function(){
+    console.warn("Time out next!");
+    window.postMessage({"to":"background","work":"timeout"}, '*');
+  },5000)
+});
 
 if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)){
   console.warn("ShopSigned!");
   window.postMessage({"to":"background","work":"next","result":{"venderId": $("#vender_id").val(),"beans":0,"shopId":$("#shop_id").val()}}, '*');
-}else if(window.location.href.match(/https?:\/\/www\.jd\.com/)){
-  console.warn("Wrong URL!");
-  window.postMessage({"to":"background","work":"next"}, '*');
+}else if(!window.location.href.match(/https?:\/\/mall\.jd\.com/)){
+  $(function(){
+    window.setTimeout(function(){
+      console.warn("Time out next!");
+      window.postMessage({"to":"background","work":"next"}, '*');
+    },5000)
+  });
 }else{
   let i = 0,key;
   while(key = window.localStorage.key(i++)){

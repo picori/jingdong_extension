@@ -10,10 +10,10 @@ $(function(){
   });
 
   $("#process_sign").click(function(){
-    var list = $("#sign_list").val().match(/https?:\/\/mall\.jd\.com\/shopSign-\d+\.html/g);
-    $("#sign_list").val("");        
+    var list = $("#sign_list").val().match(/https?:\/\/mall\.jd\.com\/shopSign-\d+\.html/g)||[];
+    $("#sign_list").val(list.join("\n"));        
     chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_sign","list":list.map(function(url){return {url};})}, function(response) {
-      console.log('收到来自后台的回复：' + response);
+      //console.log('收到来自后台的回复：' + response);
     });
   });
 
@@ -98,6 +98,20 @@ $(function(){
   $("#clear_localstorage").click(function(){
     chrome.runtime.sendMessage({"to":"content","from":"popup","work":"clear_localstorage"}, function(response) {
       console.log('收到来自后台的回复：' + response);
+    });
+  });
+
+  $("#add_coupon").click(function(){
+    var value = {
+        start_time : Date.parse([[$("#coupon_year").val(),$("#coupon_month").val(),$("#coupon_day").val()].join("-") 
+        ,[$("#coupon_hour").val(),$("#coupon_minute").val(),$("#coupon_second").val()].join(":")].join(' ')),
+        script : $("#coupon_script").val(),
+    };
+    console.warn(value);
+    chrome.storage.sync.set({["coupon_" + $("#coupon_key").val()] : 
+        value
+    },function(results){
+        //console.warn(results);
     });
   });
 });
