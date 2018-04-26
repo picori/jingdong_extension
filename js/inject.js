@@ -39,7 +39,7 @@ function collect_m_coupon(){
 
 if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)){
   console.warn("ShopSigned!");
-  window.postMessage({"to":"background","work":"next","result":{"venderId": $("#vender_id").val(),"beans":0,"shopId":$("#shop_id").val()}}, '*');
+  window.postMessage({"to":"background","work":"next","result":{"venderId": document.getElementById("vender_id").value,"beans":0,"shopId":document.getElementById("shop_id").value}}, '*');
 }else if(!window.location.href.match(/https?:\/\/mall\.jd\.com/)){
   $(function(){
     window.setTimeout(function(){

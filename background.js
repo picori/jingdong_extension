@@ -49,7 +49,19 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (e){
 //     });
 //   }, {urls:["*://f-mall.jd.com/shopGift/drawShopGiftInfo*"]});
 
+function fetchTab(callback){
+  chrome.tabs.query({index:0}, function (tabs){
+    if(!current_tab || (current_tab.id != tabs[0].id)){
+      current_tab=tabs[0]; 
+      console.warn(current_tab);    
+      addBlocker(current_tab);
+    }
+    callback(current_tab);    
+  });
+}
+
 function addBlocker(tab){
+  console.warn("fsdfsdddddddddddddddddddddddddddd");
   chrome.webRequest.onBeforeRequest.addListener(
     function(details) {
       return {cancel: true};
@@ -67,14 +79,15 @@ function addBlocker(tab){
       }
       return {cancel: false};
     },
-    {urls: ["<all_urls>"],types:["stylesheet", "script", "image",],tabId:tab.id},
+    {urls: ["<all_urls>"],types:["stylesheet", "script", "image"],tabId:tab.id},
     ["blocking","requestHeaders"]
-  );
-  chrome.webRequest.onBeforeSendHeaders.addListener(
+  );  
+  console.warn(tab)
+  chrome.webRequest.onBeforeRequest.addListener(
     function(details) {
       return {cancel: true};
     },
-    {urls: ["<all_urls>"],types:["image",],tabId:tab.id},
+    {urls: ["<all_urls>"],types:["image"],tabId:tab.id},
     ["blocking"]
   );
 }
@@ -99,21 +112,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         return callback && callback();
       }
       chrome.tabs.update(current_tab.id, {url},callback);
-  }
-  function fetchTab(callback){
-    chrome.tabs.query({index:0}, function (tabs){
-      if(tabs.length == 0){
-        console.warn("Create new tab");
-        chrome.tabs.create({index:0},function(tab){
-          console.warn("New tab is created");
-          addBlocker(tab);
-          callback(current_tab=tab);
-        });
-      }else{
-        //console.warn("Use tab index 0");
-        callback(current_tab=tabs[0]);
-      }
-    });
   }
   function fetchDatas(url_list,callback){
     if(url_list.length){
@@ -146,7 +144,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     if(request["work"] == "next"){
       let result = request["result"]||{"venderId":0,"shopId":0,"beans":0};
       counter++;
-      //console.warn("counter:\t"+counter,result);
       request["work"] = last_operaton;
       beans += result["beans"];
       if(result.shopId){
@@ -232,8 +229,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
   chrome.alarms.onAlarm.addListener(function(alarm){
     console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
-    chrome.storage.sync.get("coupons",function(coupons){
-      coupons.filter(function(coupon){return coupon["expired"] >= new Date().getTime()}).forEach(function(key){
+    chrome.storage.sync.get("coupons",function(item){
+      (item["coupons"]||[]).filter(function(coupon){return coupon["expired"] >= new Date().getTime()}).forEach(function(key){
         var offset; 
         console.warn(results[key]["start_time"] - new Date().getTime())
         if((offset=results[key]["start_time"] - new Date().getTime()) <= 60 * 1000){
@@ -243,7 +240,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             if(results[key]["script"]){
               eval(results[key]["script"]);
             }else if(results[key]["url"]){
-              $("",function(results){
+              $.ajax({},function(results){
                 console.warn(results);
               });
             }            
