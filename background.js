@@ -79,15 +79,14 @@ function addBlocker(tab){
       }
       return {cancel: false};
     },
-    {urls: ["<all_urls>"],types:["stylesheet", "script", "image"],tabId:tab.id},
+    {urls: ["<all_urls>"],types:["stylesheet", "script", "image"]},
     ["blocking","requestHeaders"]
   );  
-  console.warn(tab)
   chrome.webRequest.onBeforeRequest.addListener(
     function(details) {
       return {cancel: true};
     },
-    {urls: ["<all_urls>"],types:["image"],tabId:tab.id},
+    {urls: ["<all_urls>"],types:["image"]},
     ["blocking"]
   );
 }
@@ -172,6 +171,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       });
     }else if(request["work"] == "start_sign"){
       last_operaton = "sign";
+      console.warn(request["list"]);
       fetchSignList(request["list"],function(){
         fetchTab(function(){
           sign(function(result){            

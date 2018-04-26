@@ -20,7 +20,6 @@ $(function(){
   $("#process_sign_storage").click(function(){
     chrome.storage.local.get(null,function(results){
       list = Object.keys(results).filter(function(key){return /sign\d+/.test(key)}).map(function(key){return {url:"https://mall.jd.com/shopSign-" + results[key]["shopId"] + ".html"}});//Object.values(results);
-      console.warn(results);
       chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_sign","list":list}, function(response) {
         //console.log('收到来自后台的回复：' + response);
       });
@@ -101,8 +100,12 @@ $(function(){
 
   $("#process_follow_storage").click(function(){
     //$(this).attr("disabled","disabled");
-    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow"}, function(response) {
-      console.log('收到来自后台的回复：' + response);
+    chrome.storage.local.get(null,function(results){
+      console.warn(results);
+      list = Object.keys(results).filter(function(key){return /follow\d+/.test(key)}).map(function(key){return {venderId:results[key]["venderId"],shopId:results[key]["shopId"],url:"https://mall.jd.com/index-" + results[key]["shopId"] + ".html"}});//Object.values(results);
+      chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow","list":list}, function(response) {
+        console.log('收到来自后台的回复：' + response);
+      });
     });
   });
   $("#clear_follow_storage").click(function(){     
