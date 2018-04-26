@@ -4,50 +4,38 @@
 
 'use strict';
 
-// window.addEventListener("message", function(e)
-// {
-//   //console.log(e.data);
-//   let func = e.data.function;
-//   if(e.data.to == "inject"){
-//     if(e.data.work == "getShopGiftInfo"){
-//       let old_func = window[func];
-//       let picori_jd_func = function(data){
-//         if(data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
-//           console.warn(e.data,"There are beans!");
-//           //window.postMessage({"to":"background","work":"log_catch_beans"}, '*');
-//           old_func(data);
-//         }else{
-//           console.warn(e.data,"There are no beans!");
-//           window.postMessage({"to":"background","work":"next"}, '*');
-//         }
-//       };
-//       if(func){
-//         window[func] = picori_jd_func;
-//       }
-//     }else if(e.data.work == "drawShopGiftInfo"){
-//       let old_func = window[func];
-//       let picori_jd_func = function(data){
-//         console.warn(e.data,data);
-//         old_func(data);
-//         //window.postMessage({"to":"background","work":"next"}, '*');
-//       };
-//       if(func){
-//         window[func] = picori_jd_func;
-//       }
-//     }else if(e.data.work == "redirect"){
-//       window.location.href = e.data.url;
-//     }else{
-//       console.warn("Why am I here?");
-//     }
-//   }
-// }, false);
+window.addEventListener("message", function(e){
+  //console.log(e.data);
+  var message = e.data;
+  if(message.to == "inject"){
+    if(message.work == "collect_coupon"){
+      collect_m_coupon();
+    }
+  }
+}, false);
 
-$(function(){
-  window.setTimeout(function(){
-    console.warn("Time out next!");
-    window.postMessage({"to":"background","work":"timeout"}, '*');
-  },5000)
-});
+function collect_m_coupon(){
+  var data = {
+    sid: $("#sid").val(),
+    codeKey: $("#codeKey").val().trim(),
+    validateCode: "",
+    roleId: $("#roleId").val().trim(),
+    key: $("#key").val().trim(),
+    couponKey: $("#couponKey").val().trim(),
+    activeId: $("#activeId").val().trim(),
+    couponType: $("#couponType").val().trim(),
+    to: $("#to").val().trim(),
+    refer: $("#refer").val()
+  };
+  var params = {
+    page: window.location.href,
+    data: data,
+    url:  "https://coupon.m.jd.com/coupons/submit.json",
+    type: "post",
+  };
+  window.postMessage({"to":"background","work":"collect_coupon","params":params}, '*');
+}
+
 
 if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)){
   console.warn("ShopSigned!");
@@ -62,7 +50,7 @@ if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html
 }else{
   let i = 0,key;
   while(key = window.localStorage.key(i++)){
-    if(key.match(/^giftpicori(\d+)/)){      
+    if(key.match(/^gift/)){      
       window.localStorage.removeItem(key);
       i--;
     } 

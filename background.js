@@ -4,6 +4,14 @@
 
 'use strict';
 
+// 
+var list;
+var current_tab;
+var sign_list;
+var last_operaton = "";
+var counter = 0;
+var beans = 0;
+
 chrome.runtime.onInstalled.addListener(function() {
   // chrome.storage.sync.set({color: '#3aa757'}, function() {
   //   console.log('The color is green.');
@@ -41,33 +49,37 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (e){
 //     });
 //   }, {urls:["*://f-mall.jd.com/shopGift/drawShopGiftInfo*"]});
 
-chrome.webRequest.onBeforeRequest.addListener(
-  function(details) {
-    return {cancel: true};
-  },
-  {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207"]},
-  ["blocking"]);
-
-chrome.webRequest.onBeforeSendHeaders.addListener(
-  function(details) {
-    //console.warn(details.requestHeaders);
-    for (var i = 0; i < details.requestHeaders.length; ++i) {
-      if (details.requestHeaders[i].name === 'Referer' && details.requestHeaders[i].value.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)) {
-        return {cancel: true};
+function addBlocker(tab){
+  chrome.webRequest.onBeforeRequest.addListener(
+    function(details) {
+      return {cancel: true};
+    },
+    {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207"],tabId:tab.id},
+    ["blocking"]
+  );
+  chrome.webRequest.onBeforeSendHeaders.addListener(
+    function(details) {
+      //console.warn(details.requestHeaders);
+      for (var i = 0; i < details.requestHeaders.length; ++i) {
+        if (details.requestHeaders[i].name === 'Referer' && details.requestHeaders[i].value.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)) {
+          return {cancel: true};
+        }
       }
-    }
-    return {cancel: false};;
-  },
-  {urls: ["<all_urls>"]},
-  ["blocking","requestHeaders"]);
+      return {cancel: false};
+    },
+    {urls: ["<all_urls>"],types:["stylesheet", "script", "image",],tabId:tab.id},
+    ["blocking","requestHeaders"]
+  );
+  chrome.webRequest.onBeforeSendHeaders.addListener(
+    function(details) {
+      return {cancel: true};
+    },
+    {urls: ["<all_urls>"],types:["image",],tabId:tab.id},
+    ["blocking"]
+  );
+}
 
-// 
-var list;
-var current_tab;
-var sign_list;
-var last_operaton = "";
-var counter = 0;
-var beans = 0;
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {
   function reset_summary(){
@@ -94,6 +106,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         console.warn("Create new tab");
         chrome.tabs.create({index:0},function(tab){
           console.warn("New tab is created");
+          addBlocker(tab);
           callback(current_tab=tab);
         });
       }else{
@@ -175,6 +188,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           //console.warn(result);
         });
       });
+    }else if(request["work"] == "collect_coupon"){
+      console.warn(request["params"]);
     }
   }
 });  
@@ -201,17 +216,43 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 (function schedule(){
   var now;
   var timers = {};
+  function fetchTab(callback){
+    chrome.tabs.query({index:0}, function (tabs){
+      if(tabs.length == 0){
+        console.warn("Create new tab");
+        chrome.tabs.create({index:0},function(tab){
+          console.warn("New tab is created");
+          callback(tab);
+        });
+      }else{
+        //console.warn("Use tab index 0");
+        callback(tabs[0]);
+      }
+    });
+  }
   chrome.alarms.onAlarm.addListener(function(alarm){
     console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
-    chrome.storage.sync.get(null,function(results){
-      Object.keys(results).filter(function(key){return /^coupon_/.test(key)}).forEach(function(key){
+    chrome.storage.sync.get("coupons",function(coupons){
+      coupons.filter(function(coupon){return coupon["expired"] >= new Date().getTime()}).forEach(function(key){
         var offset; 
         console.warn(results[key]["start_time"] - new Date().getTime())
         if((offset=results[key]["start_time"] - new Date().getTime()) <= 60 * 1000){
           console.warn(new Date().getTime(),key);
           timers[key] = setTimeout(function(){
             console.warn(new Date().getTime(),"eval " + key );
-            eval(results[key]["script"]);
+            if(results[key]["script"]){
+              eval(results[key]["script"]);
+            }else if(results[key]["url"]){
+              $("",function(results){
+                console.warn(results);
+              });
+            }            
+            results[key]["expired"] = new Date().getTime();
+            chrome.storage.sync.set({[key] : 
+              results[key]
+            },function(results){
+              //console.warn(results);
+            });
           },offset);
         } 
       });
@@ -223,5 +264,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   })
 })()
 
-
+//右键菜单
+chrome.contextMenus.create({
+    title: '提取本页', // %s表示选中的文字
+    contexts: ['all'], // 只有当选中文字时才会出现此右键菜单
+    onclick: function(params,tab){
+      chrome.tabs.sendMessage(tab, {"to":"inject","work":"collect_coupon"}, function(response){
+      //console.warn(response);
+      });
+    }
+});
 

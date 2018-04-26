@@ -17,6 +17,25 @@ $(function(){
     });
   });
 
+  $("#process_sign_storage").click(function(){
+    chrome.storage.local.get(null,function(results){
+      list = Object.keys(results).filter(function(key){return /sign\d+/.test(key)}).map(function(key){return {url:"https://mall.jd.com/shopSign-" + results[key]["shopId"] + ".html"}});//Object.values(results);
+      console.warn(results);
+      chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_sign","list":list}, function(response) {
+        //console.log('收到来自后台的回复：' + response);
+      });
+    });
+  });
+
+  $("#download_sign_storage").click(function(){
+    chrome.storage.local.get(null,function(results){
+      list = Object.keys(results).filter(function(key){return /sign\d+/.test(key)}).map(function(key){return {venderId:results[key]["venderId"],shopId:results[key]["shopId"],url:"https://mall.jd.com/shopSign-" + results[key]["shopId"] + ".html"}});//Object.values(results);
+      var csv = CSV.encode(list, { header: true });
+      var file = new File([csv], "sign_from_storage.csv", {type: "text/csv;charset=utf-8"});
+      saveAs(file);
+    });
+  });
+
   $("#clear_sign").click(function(){                
     $("#sign_list").val("");  
   });
@@ -106,12 +125,23 @@ $(function(){
         start_time : Date.parse([[$("#coupon_year").val(),$("#coupon_month").val(),$("#coupon_day").val()].join("-") 
         ,[$("#coupon_hour").val(),$("#coupon_minute").val(),$("#coupon_second").val()].join(":")].join(' ')),
         script : $("#coupon_script").val(),
+        expired: 0,
     };
     console.warn(value);
     chrome.storage.sync.set({["coupon_" + $("#coupon_key").val()] : 
         value
     },function(results){
         //console.warn(results);
+    });
+  });
+
+  $("#collect_coupon").click(function(){
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs)
+    {
+        chrome.tabs.sendMessage(tabs[0].id, message, function(response)
+        {
+            if(callback) callback(response);
+        });
     });
   });
 });

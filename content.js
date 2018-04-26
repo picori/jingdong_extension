@@ -20,7 +20,7 @@ function injectCustomJs(jsPath)
   document.head.appendChild(temp);
 }
 
-injectCustomJs();
+injectCustomJs('js/inject.js');
 injectCustomJs('js/follow.js');
 
 // window.addEventListener("message", function(e)
