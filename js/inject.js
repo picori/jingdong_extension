@@ -27,13 +27,13 @@ function collect_m_coupon(){
     to: $("#to").val().trim(),
     refer: $("#refer").val()
   };
-  var params = {
-    page: window.location.href,
+  var ajax = {
+    //headers: {"Referer":window.location.href},
     data: data,
     url:  "https://coupon.m.jd.com/coupons/submit.json",
     type: "post",
   };
-  window.postMessage({"to":"background","work":"collect_coupon","params":params}, '*');
+  window.postMessage({"to":"background","work":"collect_coupon",ajax}, '*');
 }
 
 

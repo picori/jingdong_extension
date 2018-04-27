@@ -2,7 +2,7 @@
   "name": "Picori's Extension",
   "version": "1.0",
   "description": "Picori's Extension for Jingdong Login",
-  "permissions": ["background","storage","contextMenus","tabs","webNavigation","webRequest","*://*.jd.com/*","*://*.jd.hk/*","webRequestBlocking","alarms","<all_urls>"],
+  "permissions": ["background","storage","contextMenus","tabs","webNavigation","webRequest","*://*.jd.com/*","*://*.jd.hk/*","webRequestBlocking","alarms","<all_urls>","notifications"],
   "options_page": "options.html",
   "web_accessible_resources": ["js/inject.js","js/follow.js"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
@@ -20,7 +20,7 @@
   ],
   "background": {
     //"page": "background.html",
-    "scripts": ["background.js"],
+    "scripts": ["js/jquery-3.3.1.min.js","background.js"],
     "persistent": true
   },
   "browser_action": {

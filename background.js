@@ -82,13 +82,13 @@ function addBlocker(tab){
     {urls: ["<all_urls>"],types:["stylesheet", "script", "image"]},
     ["blocking","requestHeaders"]
   );  
-  chrome.webRequest.onBeforeRequest.addListener(
-    function(details) {
-      return {cancel: true};
-    },
-    {urls: ["<all_urls>"],types:["image"]},
-    ["blocking"]
-  );
+  // chrome.webRequest.onBeforeRequest.addListener(
+  //   function(details) {
+  //     return {cancel: true};
+  //   },
+  //   {urls: ["<all_urls>"],types:["image"]},
+  //   ["blocking"]
+  // );
 }
 
 
@@ -103,11 +103,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
   function follow(callback){
       let url = (list||[]).shift();
-      if(!url){
-        list = undefined;
-        console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
-        console.warn("All beans are caught!");
-        reset_summary();
+      if(!url){        
+        notify({title:"All venders are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+        // console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
+        // console.warn("All venders are followed!");  
+        reset_summary();      
         return callback && callback();
       }
       chrome.tabs.update(current_tab.id, {url},callback);
@@ -125,11 +125,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
   function sign(callback){
     let current = (list||[]).shift();
-    if(!current){
-      list = undefined;
-      console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
-      console.warn("All venders are signed!");
-      reset_summary();
+    if(!current){      
+      notify({title:"All venders are signed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+      // console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
+      // console.warn("All venders are signed!"); 
+      reset_summary();     
       return callback && callback();
     }
     let {url} = current;
@@ -147,7 +147,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       beans += result["beans"];
       if(result.shopId){
         if(result["beans"]){
-          console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
+          notify({title:"Caught a vender width beans!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+          //console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
         }
         chrome.storage.local.set({[last_operaton + result.shopId]:result},function(results){
           
@@ -185,8 +186,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           //console.warn(result);
         });
       });
-    }else if(request["work"] == "collect_coupon"){
-      console.warn(request["params"]);
+    }else if(request["work"] == "collect_coupon"){      
+      var ajax = request["ajax"];
+      console.warn(ajax);
+      chrome.storage.sync.set({["coupon"+ajax["data"]["key"]]:{ajax}},function(results){
+        console.warn(results);
+      });
     }
   }
 });  
@@ -229,25 +234,35 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
   chrome.alarms.onAlarm.addListener(function(alarm){
     console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
-    chrome.storage.sync.get("coupons",function(item){
-      (item["coupons"]||[]).filter(function(coupon){return coupon["expired"] >= new Date().getTime()}).forEach(function(key){
+    chrome.storage.sync.get(null,function(items){
+      var couponKeys = Object.keys(items).filter(function(key){return /^coupon/.test(key);});
+      console.warn(couponKeys);
+      couponKeys.forEach(function(key){
+        var coupon = items[key];
+        coupon["start_time"] = coupon["start_time"] || 0;
+        coupon["expired"] = coupon["expired"] || 0;
+        if( coupon["expired"] && coupon["expired"] < new Date().getTime() ){
+          console.warn("remove coupon \t",coupon)
+          chrome.storage.sync.remove(key,function(results){
+
+          });
+          return;
+        }
         var offset; 
-        console.warn(results[key]["start_time"] - new Date().getTime())
-        if((offset=results[key]["start_time"] - new Date().getTime()) <= 60 * 1000){
+        console.warn(coupon["start_time"] - new Date().getTime())
+        if((offset = coupon["start_time"] - new Date().getTime()) <= 60 * 1000){
           console.warn(new Date().getTime(),key);
           timers[key] = setTimeout(function(){
-            console.warn(new Date().getTime(),"eval " + key );
-            if(results[key]["script"]){
-              eval(results[key]["script"]);
-            }else if(results[key]["url"]){
-              $.ajax({},function(results){
+            if(coupon["script"]){
+              eval(coupon["script"]);
+            }else if(coupon["ajax"]){
+              $.ajax(coupon["ajax"]).done(function(results){
                 console.warn(results);
               });
             }            
-            results[key]["expired"] = new Date().getTime();
-            chrome.storage.sync.set({[key] : 
-              results[key]
-            },function(results){
+            coupon["expired"] = new Date().getTime();
+            console.warn("set coupon expired",coupon);
+            chrome.storage.sync.set({[key] : coupon},function(results){
               //console.warn(results);
             });
           },offset);
@@ -266,9 +281,18 @@ chrome.contextMenus.create({
     title: '提取本页', // %s表示选中的文字
     contexts: ['all'], // 只有当选中文字时才会出现此右键菜单
     onclick: function(params,tab){
-      chrome.tabs.sendMessage(tab, {"to":"inject","work":"collect_coupon"}, function(response){
+      chrome.tabs.sendMessage(tab.id, {"to":"inject","work":"collect_coupon"}, function(response){
       //console.warn(response);
       });
     }
 });
 
+function notify(option,callback = function(){}){
+  option["iconUrl"] = "images/get_started48.png";
+  option["type"] = "list";
+  option["message"] = "Work finished!";
+  option["items"].forEach(function(item){
+    item.message += "";
+  });
+  chrome.notifications.create(null,option,callback);
+}
