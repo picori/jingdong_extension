@@ -147,7 +147,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       beans += result["beans"];
       if(result.shopId){
         if(result["beans"]){
-          notify({title:"Caught a vender width beans!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+          notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: result["beans"]},{title:"Current Total",message:beans}]});
           //console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
         }
         chrome.storage.local.set({[last_operaton + result.shopId]:result},function(results){
@@ -172,7 +172,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       });
     }else if(request["work"] == "start_sign"){
       last_operaton = "sign";
-      console.warn(request["list"]);
       fetchSignList(request["list"],function(){
         fetchTab(function(){
           sign(function(result){            
@@ -232,8 +231,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       }
     });
   }
-  chrome.alarms.onAlarm.addListener(function(alarm){
-    console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
+  function process_coupon(){
     chrome.storage.sync.get(null,function(items){
       var couponKeys = Object.keys(items).filter(function(key){return /^coupon/.test(key);});
       console.warn(couponKeys);
@@ -269,6 +267,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         } 
       });
     });
+  }
+  chrome.alarms.onAlarm.addListener(function(alarm){
+    console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
+    //process_coupon();
   });
   chrome.alarms.create("schedule", {
     when : 60 * 1000 - (now = new Date().getTime()) % 60000 + now ,

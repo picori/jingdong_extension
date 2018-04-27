@@ -33,20 +33,44 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   //console.log('收到来自content-script的消息：');
   //console.log(request, sender, sendResponse);
   //sendResponse('我是后台，我已收到你的消息：' + JSON.stringify(request));
-    if(request.to == "inject"){
-        //console.warn(request.work);
-        window.postMessage(request, '*');
-    }else if(request.to == "content"){
-      console.warn(request);
-      if(request.work == "clear_localstorage"){
-        let i = 0,key;
-        while(key = window.localStorage.key(i++)){
-          console.warn(key);
-          key.match("/^giftpicori(\d+)/") && window.localStorage.removeItem(key);
-        }
+  console.warn(request);
+  if(request.to == "inject"){
+      //console.warn(request.work);
+      window.postMessage(request, '*');
+  }else if(request.to == "content"){
+    console.warn(request);
+    if(request.work == "clear_localstorage"){
+      let i = 0,key;
+      while(key = window.localStorage.key(i++)){
+        console.warn(key);
+        key.match("/^giftpicori(\d+)/") && window.localStorage.removeItem(key);
       }
+    }else if(request.work == "get_coupon_list"){
+      get_coupon_list();
     }
+  }
 });
+
+function get_coupon_list(){
+  var callback = "jQuery" + Math.floor(Math.random()*1000000);
+  window[callback] = function(result){
+    console.warn(result);
+  };
+  console.warn("get_coupon_list");
+  $.ajax({
+    url:`https://a.jd.com/indexAjax/getCouponListByCatalogId.html`,
+    dataType: 'jsonp',
+    data:{
+      catalogId : 81,
+      page : 1,
+      pageSize : 9,
+      _ : new Date().getTime()
+    },
+    success : function(result){
+      console.warn(result);
+    }
+  })
+}
 
 window.addEventListener("message", function(e){
   let data = e.data;

@@ -102,7 +102,7 @@ $(function(){
     //$(this).attr("disabled","disabled");
     chrome.storage.local.get(null,function(results){
       console.warn(results);
-      list = Object.keys(results).filter(function(key){return /follow\d+/.test(key)}).map(function(key){return {venderId:results[key]["venderId"],shopId:results[key]["shopId"],url:"https://mall.jd.com/index-" + results[key]["shopId"] + ".html"}});//Object.values(results);
+      list = Object.keys(results).filter(function(key){return /follow\d+/.test(key)}).map(function(key){return "https://mall.jd.com/index-" + results[key]["shopId"] + ".html"});//Object.values(results);
       chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow","list":list}, function(response) {
         console.log('收到来自后台的回复：' + response);
       });
@@ -145,6 +145,11 @@ $(function(){
         {
             if(callback) callback(response);
         });
+    });
+  });
+  $("#collect_batch_coupon").click(function(){
+    chrome.runtime.sendMessage({"to":"content","from":"popup","work":"get_coupon_list"}, function(response) {
+      //console.log('收到来自后台的回复：' + response);
     });
   });
 });
