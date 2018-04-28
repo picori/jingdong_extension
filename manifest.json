@@ -4,7 +4,7 @@
   "description": "Picori's Extension for Jingdong Login",
   "permissions": ["background","storage","contextMenus","tabs","webNavigation","webRequest","*://*.jd.com/*","*://*.jd.hk/*","webRequestBlocking","alarms","<all_urls>","notifications"],
   "options_page": "options.html",
-  "web_accessible_resources": ["js/inject.js","js/follow.js"],
+  "web_accessible_resources": ["js/inject.js","js/follow.js","js/jquery-3.3.1.min.js"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": 
   [
@@ -13,7 +13,7 @@
       // "<all_urls>" 表示匹配所有地址
       "matches": ["*://*.jd.com/*","*://*.jd.hk/*"],
       // 多个JS按顺序注入
-      "js": ["content.js"],
+      "js": ["js/jquery-3.3.1.min.js","content.js"],
       // 代码注入的时间，可选值： "document_start", "document_end", or "document_idle"，最后一个表示页面空闲时，默认document_idle
       "run_at": "document_end"
     }

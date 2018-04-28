@@ -10,6 +10,8 @@ window.addEventListener("message", function(e){
   if(message.to == "inject"){
     if(message.work == "collect_coupon"){
       collect_m_coupon();
+    }else if(message.work == "get_all_coupons"){
+      get_all_coupons();
     }
   }
 }, false);
@@ -34,6 +36,44 @@ function collect_m_coupon(){
     type: "post",
   };
   window.postMessage({"to":"background","work":"collect_coupon",ajax}, '*');
+}
+
+function get_coupon_list(catalogId,page=1,callback){
+  var callback_name = "jQuery" + Math.floor(Math.random()*1000000);
+  window[callback_name] = callback;
+  $.ajax({
+    url:`https://a.jd.com/indexAjax/getCouponListByCatalogId.html`,
+    dataType: 'jsonp',
+    crossDomain:true,
+    jsonpCallback:callback_name,
+    data:{
+      catalogId : catalogId,
+      page : page,
+      pageSize : 30,//30 is the max value
+      //callback : callback,
+    }
+  })
+}
+
+function get_all_coupons(){
+  var catalogs = [81];
+  var page_index = 1;
+  var catalog_index = 0;
+  var callback = function(result){
+    var couponList = result["couponList"];
+    console.warn(couponList);
+    if(couponList && couponList.length){
+      window.postMessage({"to":"background","work":"collect_coupon",couponList}, '*');
+      page_index++;      
+    }else{
+      page_index = 0;
+      catalog_index++; 
+    }    
+    if(catalogs[catalog_index]){
+      get_coupon_list(catalogs[catalog_index],page_index,callback);  
+    }      
+  };
+  get_coupon_list(catalogs[catalog_index],page_index,callback);
 }
 
 

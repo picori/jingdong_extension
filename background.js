@@ -31,14 +31,18 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (e){
   // console.warn(e)
 })
 
-// chrome.webRequest.onBeforeRequest.addListener(
-//   function (e){
-//     console.warn(e);
-//     chrome.tabs.sendMessage(e.tabId, {"to":"inject","work":"getShopGiftInfo","venderId":e.url.match(/v(?:ender)?Id=(\d+)&/)[1],"function":e.url.match(/callback=(jQuery\d+)&/)[1]}, function(response)
-//     {
-//       //console.warn(response);
-//     });
-//   }, {urls:["*://f-mall.jd.com/shopGift/getShopGiftInfo*"]});
+//fake to be from same origin
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function (details){
+    //console.warn(details.requestHeaders);
+    details.requestHeaders.forEach(function(header){
+      if(header.name == "Referer"){
+        header.value = "https://a.jd.com";
+      }
+    }) //push({name:"Access-Control-Allow-Origin",value:"*"});
+    return {requestHeaders:details.requestHeaders}
+  }, {urls:["*://a.jd.com/*"]},
+  ["blocking","requestHeaders"]);
 
 // chrome.webRequest.onBeforeRequest.addListener(
 //   function (e){
@@ -185,12 +189,20 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           //console.warn(result);
         });
       });
-    }else if(request["work"] == "collect_coupon"){      
-      var ajax = request["ajax"];
-      console.warn(ajax);
-      chrome.storage.sync.set({["coupon"+ajax["data"]["key"]]:{ajax}},function(results){
-        console.warn(results);
-      });
+    }else if(request["work"] == "collect_coupon"){
+      if(request["ajax"]){
+        var ajax = request["ajax"];
+        console.warn(ajax);
+        chrome.storage.sync.set({["coupon"+ajax["data"]["key"]]:{ajax}},function(results){
+          console.warn(results);
+        });
+      }else if(request["couponList"]){
+        request["couponList"].forEach(function(coupon){
+          chrome.storage.local.set({["coupon" + coupon["key"]]:{coupon}},function(results){
+            console.warn(results);
+          });
+        });
+      } 
     }
   }
 });  

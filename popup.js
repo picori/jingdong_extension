@@ -147,9 +147,14 @@ $(function(){
         });
     });
   });
-  $("#collect_batch_coupon").click(function(){
-    chrome.runtime.sendMessage({"to":"content","from":"popup","work":"get_coupon_list"}, function(response) {
-      //console.log('收到来自后台的回复：' + response);
+  $("#collect_coupon_list").click(function(){
+    chrome.tabs.query({index:0}, function(tabs)
+    {
+        console.warn(tabs);
+        chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"popup","work":"get_all_coupons"}, function(response)
+        {
+            //if(callback) callback(response);
+        });
     });
   });
 });
