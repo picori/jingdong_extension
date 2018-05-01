@@ -803,11 +803,11 @@ function doAttention(a) {
         }
     });
 }
-$(".btn-coll").livequery("click", function() {
-    var a = $(this),
-        b = parseInt(a.attr("id").replace("coll", ""));
-    doAttention(b);
-});
+// $(".btn-coll").livequery("click", function() {
+//     var a = $(this),
+//         b = parseInt(a.attr("id").replace("coll", ""));
+//     doAttention(b);
+// });
 (function($, w) {
     if (!w.console) {
         w.console = {};

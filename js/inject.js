@@ -39,7 +39,7 @@ function collect_m_coupon(){
   };
   var info = {
     rule: $(".rule").html().trim(),
-    use_rule : $(".use-rule").text().trim(),
+    use_rule : $(".use-rule>:text").text().trim(),
     money : $(".money strong").html().trim(),
   };
   window.postMessage({"to":"background","work":"collect_coupon",coupon:{ajax,info}}, '*');
@@ -124,6 +124,8 @@ function clear_useless_coupon(){
 if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)){
   console.warn("ShopSigned!");
   window.postMessage({"to":"background","work":"next","result":{"venderId": document.getElementById("vender_id").value,"beans":((document.querySelector(".jingdou .c-yellow")||{}).innerHTML * 1) || 0,"shopId":document.getElementById("shop_id").value}}, '*');
+}else if(window.location.href.match(/https?:\/\/www\.jd\.com\/error\.aspx/)){
+  window.postMessage({"to":"background","work":"next"}, '*');
 }else if(!window.location.href.match(/https?:\/\/mall\.jd\.com/)){
   $(function(){
     window.setTimeout(function(){
