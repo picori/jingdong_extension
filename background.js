@@ -11,6 +11,23 @@ var sign_list;
 var last_operaton = "";
 var counter = 0;
 var beans = 0;
+var db = new Dexie("MyDatabase");
+db.version(1).stores({
+    coupon: "&key,startTime,endTime,&id,priority",
+    coupon_collection: "&key,startTime,endTime,&id,priority"
+});
+
+// class Coupon {
+//     // Prototype method
+//     save() {
+//         return db.coupon.put(this); // Will only save own props.
+//     }
+
+//     // Prototype property
+//     get age() {
+//         return moment(Date.now()).diff (this.birthDate, 'years');
+//     }
+// }
 
 chrome.runtime.onInstalled.addListener(function() {
   // chrome.storage.sync.set({color: '#3aa757'}, function() {
@@ -56,8 +73,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 function fetchTab(callback){
   chrome.tabs.query({index:0}, function (tabs){
     if(!current_tab || (current_tab.id != tabs[0].id)){
-      current_tab=tabs[0]; 
-      console.warn(current_tab);    
+      current_tab=tabs[0];     
       addBlocker(current_tab);
     }
     callback(current_tab);    
@@ -65,7 +81,6 @@ function fetchTab(callback){
 }
 
 function addBlocker(tab){
-  console.warn("fsdfsdddddddddddddddddddddddddddd");
   chrome.webRequest.onBeforeRequest.addListener(
     function(details) {
       return {cancel: true};
@@ -73,19 +88,19 @@ function addBlocker(tab){
     {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207"],tabId:tab.id},
     ["blocking"]
   );
-  chrome.webRequest.onBeforeSendHeaders.addListener(
-    function(details) {
-      //console.warn(details.requestHeaders);
-      for (var i = 0; i < details.requestHeaders.length; ++i) {
-        if (details.requestHeaders[i].name === 'Referer' && details.requestHeaders[i].value.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)) {
-          return {cancel: true};
-        }
-      }
-      return {cancel: false};
-    },
-    {urls: ["<all_urls>"],types:["stylesheet", "script", "image"]},
-    ["blocking","requestHeaders"]
-  );  
+  // chrome.webRequest.onBeforeSendHeaders.addListener(
+  //   function(details) {
+  //     //console.warn(details.requestHeaders);
+  //     for (var i = 0; i < details.requestHeaders.length; ++i) {
+  //       if (details.requestHeaders[i].name === 'Referer' && details.requestHeaders[i].value.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)) {
+  //         return {cancel: true};
+  //       }
+  //     }
+  //     return {cancel: false};
+  //   },
+  //   {urls: ["<all_urls>"],types:["stylesheet", "script", "image"]},
+  //   ["blocking","requestHeaders"]
+  // );  
   // chrome.webRequest.onBeforeRequest.addListener(
   //   function(details) {
   //     return {cancel: true};
@@ -108,7 +123,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   function follow(callback){
       let url = (list||[]).shift();
       if(!url){        
-        notify({title:"All venders are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+        notify({title:"All shops are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
         // console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
         // console.warn("All venders are followed!");  
         reset_summary();      
@@ -130,7 +145,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   function sign(callback){
     let current = (list||[]).shift();
     if(!current){      
-      notify({title:"All venders are signed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+      notify({title:"All shops are signed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
       // console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
       // console.warn("All venders are signed!"); 
       reset_summary();     
@@ -151,7 +166,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       beans += result["beans"];
       if(result.shopId){
         if(result["beans"]){
-          notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: result["beans"]},{title:"Current Total",message:beans}]});
+          notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: result["beans"]},{title:"Current Total Beans",message:beans}]});
           //console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
         }
         chrome.storage.local.set({[last_operaton + result.shopId]:result},function(results){
@@ -190,19 +205,38 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         });
       });
     }else if(request["work"] == "collect_coupon"){
-      if(request["ajax"]){
-        var ajax = request["ajax"];
+      if(request["coupon"]){
+        let {ajax,info} = request["coupon"];
         console.warn(ajax);
-        chrome.storage.sync.set({["coupon"+ajax["data"]["key"]]:{ajax}},function(results){
+        chrome.storage.sync.set({["coupon"+ajax["data"]["key"]]:{ajax,info}},function(results){
           console.warn(results);
         });
       }else if(request["couponList"]){
         request["couponList"].forEach(function(coupon){
-          chrome.storage.local.set({["coupon" + coupon["key"]]:{coupon}},function(results){
-            console.warn(results);
-          });
+          if(coupon.quota - coupon.denomination == 1){
+            coupon.priority = 1;
+          }else if(coupon.denomination / coupon.quota >= 0.9){
+            coupon.priority = 10;
+          }else if(coupon.remindPeople){
+            coupon.priority = 20;
+          }else if(coupon.shopId){
+            coupon.priority = 100;
+          }else{
+            coupon.priority = 50;
+          }
+          if(!coupon.key){
+            console.warn(coupon);
+            return;
+          }          
+          //db.coupon_collection.put(coupon).then(function(){},function(result){console.warn(coupon)});
+          db.coupon.put(coupon).then(function(){},function(result){console.warn(coupon)});
+          // chrome.storage.local.set({["coupon" + coupon["key"]]:{coupon}},function(results){
+          //   console.warn(results);
+          // });
         });
-      } 
+      }else{
+
+      }
     }
   }
 });  
@@ -245,24 +279,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
   function process_coupon(){
     chrome.storage.sync.get(null,function(items){
-      var couponKeys = Object.keys(items).filter(function(key){return /^coupon/.test(key);});
-      console.warn(couponKeys);
-      couponKeys.forEach(function(key){
-        var coupon = items[key];
-        coupon["start_time"] = coupon["start_time"] || 0;
-        coupon["expired"] = coupon["expired"] || 0;
-        if( coupon["expired"] && coupon["expired"] < new Date().getTime() ){
-          console.warn("remove coupon \t",coupon)
-          chrome.storage.sync.remove(key,function(results){
-
-          });
-          return;
-        }
+      var now = new Date().getTime();
+      var next_minute = now - now % (60 * 1000) + 60 * 1000;
+      var schedules = Object.keys(items).filter(function(key){return new RegExp("^schedule"+next_minute).test(key);});
+      console.warn("^schedule"+next_minute,schedules);
+      schedules.forEach(function(key){
+        var coupons = Object.values(items[key]);
         var offset; 
-        console.warn(coupon["start_time"] - new Date().getTime())
-        if((offset = coupon["start_time"] - new Date().getTime()) <= 60 * 1000){
-          console.warn(new Date().getTime(),key);
-          timers[key] = setTimeout(function(){
+        coupons.forEach(function(coupon){
+          setTimeout(function(){
             if(coupon["script"]){
               eval(coupon["script"]);
             }else if(coupon["ajax"]){
@@ -270,19 +295,47 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
                 console.warn(results);
               });
             }            
-            coupon["expired"] = new Date().getTime();
-            console.warn("set coupon expired",coupon);
-            chrome.storage.sync.set({[key] : coupon},function(results){
-              //console.warn(results);
-            });
-          },offset);
-        } 
+            // coupon["expired"] = new Date().getTime();
+            // console.warn("set coupon expired",coupon);
+            // chrome.storage.sync.set({[key] : coupon},function(results){
+            //   //console.warn(results);
+            // });
+          },next_minute - new Date().getTime());
+        });
+        // coupon["start_time"] = coupon["start_time"] || 0;
+        // coupon["expired"] = coupon["expired"] || 0;
+        // if( coupon["expired"] && coupon["expired"] < new Date().getTime() ){
+        //   console.warn("remove coupon \t",coupon)
+        //   chrome.storage.sync.remove(key,function(results){
+
+        //   });
+        //   return;
+        // }
+        // var offset; 
+        // console.warn(coupon["start_time"] - new Date().getTime())
+        // if((offset = coupon["start_time"] - new Date().getTime()) <= 60 * 1000){
+        //   console.warn(new Date().getTime(),key);
+        //   timers[key] = setTimeout(function(){
+        //     if(coupon["script"]){
+        //       eval(coupon["script"]);
+        //     }else if(coupon["ajax"]){
+        //       $.ajax(coupon["ajax"]).done(function(results){
+        //         console.warn(results);
+        //       });
+        //     }            
+        //     coupon["expired"] = new Date().getTime();
+        //     console.warn("set coupon expired",coupon);
+        //     chrome.storage.sync.set({[key] : coupon},function(results){
+        //       //console.warn(results);
+        //     });
+        //   },offset);
+        // } 
       });
     });
   }
   chrome.alarms.onAlarm.addListener(function(alarm){
     console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
-    //process_coupon();
+    process_coupon();
   });
   chrome.alarms.create("schedule", {
     when : 60 * 1000 - (now = new Date().getTime()) % 60000 + now ,
@@ -310,3 +363,51 @@ function notify(option,callback = function(){}){
   });
   chrome.notifications.create(null,option,callback);
 }
+
+function refresh_conpon_list(){
+  chrome.storage.sync.get(null,function(results){
+    Object.keys(results).filter(function(key){return /^coupon/.test(key)}).forEach(function(key){
+      // $("#coupon_list").append(`<div class="input-group">
+      //   <div class="input-group-prepend">
+      //     <a href="#" class="list-group-item list-group-item-action input-group-text">${key}</a>
+      //   </div>
+      //   <input type="text" class="form-control datetimepicker" />
+      //   <div class="input-group-append">
+      //     <button type="button" class="btn btn-primary" id="add_coupon">添加时间</button>
+      //   </div>
+      // </div>`);
+      $(`<div class="input-group"></div>`).append(`<div class="input-group-prepend">
+          <a href="#" class="list-group-item list-group-item-action input-group-text">${key}</a>
+        </div>`).append($(`<input type="text" class="form-control datetimepicker" />`).datetimepicker()).append($(`<div class="input-group-append">
+          <button type="button" class="btn btn-primary" id="add_coupon">添加时间</button>
+        </div>`).click(function(){
+          var time = Date.parse($(this).siblings(".datetimepicker").val());
+          chrome.storage.sync.get("schedule"+time,function(schedule){
+            schedule = schedule || {};
+            schedule[key] = results[key];
+            chrome.storage.sync.set({["schedule"+time] : schedule},function(){
+              //timeline
+              console.warn(schedule[key]);
+            });
+          });
+        })).append(`<table class="table collapse"></table>`)
+        .appendTo("#coupon_list");
+    });
+  });
+}
+
+$(function(){
+  $('#datetimepicker').datetimepicker();
+  $("#save_to_db").click(function(){
+
+  });
+  $("#clear_useless_coupon").click(function(){
+    chrome.tabs.query({index:0}, function(tabs){
+      console.warn(tabs);
+      chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"backgroud","work":"clear_useless_coupon"}, function(response){
+          //if(callback) callback(response);
+      });
+    });    
+  })
+  refresh_conpon_list();
+});

@@ -2,10 +2,9 @@
 <meta charset="utf-8">
 <html>
   <head>
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/jquery.datetimepicker.min.css" />
   	<style>
-  		button {
-  			margin-left:10px;
-  		}
       nav a.focus{
         color:red;
         font-weight:bolder;
@@ -19,8 +18,10 @@
   	</style>
   </head>
   <script src="js/jquery-3.3.1.min.js"></script>
+  <script src="js/jquery.datetimepicker.full.min.js"></script>
+  <script src="js/bootstrap.min.js"></script> 
   <body>
-  	<nav>
+  	<nav class="navbar">
   		<a href="#" class="focus">关注</a>
 		  <a href="#">签到</a>
       <a href="#">券</a>
@@ -36,8 +37,10 @@
     <div class="panel">
         <textarea style="width:400px;height:300px;" id="coupon_script" name="coupon_script"></textarea>
         <span>key</span><input type="text" id="coupon_key" /></br>
-        <input type="text" id="coupon_year" size=2 /><span>年</span><input type="text" id="coupon_month" size=1 /><span>月</span><input type="text" id="coupon_day" size=1 /><span>日</span><input type="text" id="coupon_hour" size=1 /><span>时</span><input type="text" id="coupon_minute" size=1 /><span>分</span><input type="text" id="coupon_second" size=1 /><span>秒</span>
-        <div><button id="add_coupon">添加</button></div><button id="collect_coupon">提取当前页面</button><button id="collect_coupon_list">提取优惠券列表</button></div>
+        <div class="input-group">
+        <input type="text" id="datetimepicker" />
+        </div>
+        <div><button id="add_coupon">添加</button><button id="add_coupon">测试</button></div><button id="collect_coupon">提取当前页面</button><button id="collect_coupon_list">提取所有优惠券</button><button id="show_coupon_collection">优秀优惠券列表</button><button id="clear_useless_coupon">删除垃圾优惠券</button></div>
     </div>
     <script src="js/csv.js"></script>
     <script src="js/FileSaver.js"></script>

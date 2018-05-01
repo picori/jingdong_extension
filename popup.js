@@ -5,6 +5,7 @@
 //'use strict';
 
 $(function(){
+  $('#datetimepicker').datetimepicker();
   $("nav a").click(function(){
     $(".panel").removeClass("focus").eq($(this).addClass("focus").siblings().removeClass("focus").end().index()).addClass("focus");
   });
@@ -156,5 +157,24 @@ $(function(){
             //if(callback) callback(response);
         });
     });
+  });
+  $("#show_coupon_collection").click(function(){
+    chrome.storage.local.get(null,function(results){
+      var list = Object.keys(results).filter(function(key){return /^coupon\w+/.test(key) && results[key]["coupon"]})
+      .map(function(key){
+        return results[key]["coupon"];
+      }).filter(function(coupon){
+        return Date.parse(coupon["endTime"]) - Date.parse(coupon["startTime"]) <= 10 * 60 * 1000;
+      });
+      console.warn(list);
+    });
+  });
+  $("#clear_useless_coupon").click(function(){
+    chrome.tabs.query({index:0}, function(tabs){
+      console.warn(tabs);
+      chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"popup","work":"clear_useless_coupon"}, function(response){
+          //if(callback) callback(response);
+      });
+    });    
   });
 });
