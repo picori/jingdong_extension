@@ -282,7 +282,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       var now = new Date().getTime();
       var next_minute = now - now % (60 * 1000) + 60 * 1000;
       var schedules = Object.keys(items).filter(function(key){return new RegExp("^schedule"+next_minute).test(key);});
-      console.warn("^schedule"+next_minute,schedules);
+      console.warn("schedule"+next_minute,schedules);
       schedules.forEach(function(key){
         var coupons = Object.values(items[key]);
         var offset; 
@@ -346,7 +346,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 //右键菜单
 chrome.contextMenus.create({
     title: '提取本页', // %s表示选中的文字
-    contexts: ['all'], // 只有当选中文字时才会出现此右键菜单
+    contexts: ['all'], 
     onclick: function(params,tab){
       chrome.tabs.sendMessage(tab.id, {"to":"inject","work":"collect_coupon"}, function(response){
       //console.warn(response);
@@ -383,7 +383,7 @@ function refresh_conpon_list(){
         </div>`).click(function(){
           var time = Date.parse($(this).siblings(".datetimepicker").val());
           chrome.storage.sync.get("schedule"+time,function(schedule){
-            schedule = schedule || {};
+            schedule = schedule["schedule"+time] || {};
             schedule[key] = results[key];
             chrome.storage.sync.set({["schedule"+time] : schedule},function(){
               //timeline
