@@ -369,15 +369,6 @@ function notify(option,callback = function(){}){
 function refresh_conpon_list(){
   chrome.storage.sync.get(null,function(results){
     Object.keys(results).filter(function(key){return /^coupon/.test(key)}).forEach(function(key){
-      // $("#coupon_list").append(`<div class="input-group">
-      //   <div class="input-group-prepend">
-      //     <a href="#" class="list-group-item list-group-item-action input-group-text">${key}</a>
-      //   </div>
-      //   <input type="text" class="form-control datetimepicker" />
-      //   <div class="input-group-append">
-      //     <button type="button" class="btn btn-primary" id="add_coupon">添加时间</button>
-      //   </div>
-      // </div>`);
       $(`<div class="input-group"></div>`).append(`<div class="input-group-prepend">
           <a href="#" class="list-group-item list-group-item-action input-group-text">${key}</a>
         </div>`).append($(`<input type="text" class="form-control datetimepicker" />`).datetimepicker()).append($(`<div class="input-group-append">

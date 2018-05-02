@@ -5,6 +5,7 @@
 //'use strict';
 
 $(function(){
+  var background_page = chrome.extension.getBackgroundPage();
   $('#datetimepicker').datetimepicker();
   $("nav a").click(function(){
     $(".panel").removeClass("focus").eq($(this).addClass("focus").siblings().removeClass("focus").end().index()).addClass("focus");
@@ -177,4 +178,5 @@ $(function(){
       });
     });    
   });
+  background_page.refresh_conpon_list();
 });
