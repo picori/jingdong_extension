@@ -39,7 +39,7 @@ function collect_m_coupon(){
   };
   var info = {
     rule: $(".rule").html().trim(),
-    use_rule : $(".use-rule>:text").text().trim(),
+    use_rule : $(".use-rule").text().trim().replace(/[\n\r\s]/g,""),
     money : $(".money strong").html().trim(),
   };
   window.postMessage({"to":"background","work":"collect_coupon",coupon:{ajax,info}}, '*');

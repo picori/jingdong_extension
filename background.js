@@ -291,8 +291,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             if(coupon["script"]){
               eval(coupon["script"]);
             }else if(coupon["ajax"]){
-              $.ajax(coupon["ajax"]).done(function(results){
-                console.warn(results);
+              console.warn(new Date().getTime());
+              $.ajax(coupon["ajax"]).done(function(result){
+                console.warn(result);
+                notify({title:"Coupon draw finished!",items:[{title:"returnMsg",message:result["returnMsg"]}]});
               });
             }            
             // coupon["expired"] = new Date().getTime();
@@ -300,7 +302,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             // chrome.storage.sync.set({[key] : coupon},function(results){
             //   //console.warn(results);
             // });
-          },next_minute - new Date().getTime());
+          },60 * 1000);
         });
         // coupon["start_time"] = coupon["start_time"] || 0;
         // coupon["expired"] = coupon["expired"] || 0;
