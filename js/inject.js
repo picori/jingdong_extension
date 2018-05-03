@@ -120,28 +120,33 @@ function clear_useless_coupon(){
   });
 }
 
-
-if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)){
-  console.warn("ShopSigned!");
-  window.postMessage({"to":"background","work":"next","result":{"venderId": document.getElementById("vender_id").value,"beans":((document.querySelector(".jingdou .c-yellow")||{}).innerHTML * 1) || 0,"shopId":document.getElementById("shop_id").value}}, '*');
-}else if(window.location.href.match(/https?:\/\/www\.jd\.com\/error\.aspx/)){
-  window.postMessage({"to":"background","work":"next"}, '*');
-}else if(!window.location.href.match(/https?:\/\/mall\.jd\.com/)){
-  $(function(){
-    window.setTimeout(function(){
-      console.warn("Time out next!");
-      window.postMessage({"to":"background","work":"next"}, '*');
-    },5000)
-  });
-}else{
-  let i = 0,key;
-  while(key = window.localStorage.key(i++)){
-    if(key.match(/^gift/)){      
-      window.localStorage.removeItem(key);
-      i--;
-    } 
+(function (){
+  if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)){
+    console.warn("ShopSigned!");
+    window.postMessage({"to":"background","work":"next","result":{"venderId": document.getElementById("vender_id").value,"beans":((document.querySelector(".jingdou .c-yellow")||{}).innerHTML * 1) || 0,"shopId":document.getElementById("shop_id").value}}, '*');
+  }else if(window.location.href.match(/https?:\/\/www\.jd\.com\/error\.aspx/)){
+    window.postMessage({"to":"background","work":"next"}, '*');
+  }else if(!window.location.href.match(/https?:\/\/mall\.jd\.com/)){
+    $(function(){
+      window.setTimeout(function(){
+        console.warn("Time out next!");
+        window.postMessage({"to":"background","work":"next"}, '*');
+      },5000)
+    });
+  }else{
+    if($("div.error h2:contains('抱歉，您请求的地址已下线或者过期')")){
+      return window.postMessage({"to":"background","work":"next"}, '*');
+    }
+    let i = 0,key;
+    while(key = window.localStorage.key(i++)){
+      if(key.match(/^gift/)){      
+        window.localStorage.removeItem(key);
+        i--;
+      } 
+    }
   }
-}
+})();
+
 
 // var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
 // var target = document.querySelector('body');

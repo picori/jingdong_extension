@@ -294,7 +294,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
               console.warn(new Date().getTime());
               $.ajax(coupon["ajax"]).done(function(result){
                 console.warn(result);
-                notify({title:"Coupon draw finished!",items:[{title:"returnMsg",message:result["returnMsg"]}]});
+                notify({title:"Coupon draw finished!",items:[{title:"returnMsg",message:result}]});
               });
             }            
             // coupon["expired"] = new Date().getTime();
@@ -345,16 +345,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   })
 })()
 
-//右键菜单
-chrome.contextMenus.create({
-    title: '提取本页', // %s表示选中的文字
-    contexts: ['all'], 
-    onclick: function(params,tab){
-      chrome.tabs.sendMessage(tab.id, {"to":"inject","work":"collect_coupon"}, function(response){
-      //console.warn(response);
-      });
-    }
-});
+// //右键菜单
+// chrome.contextMenus.create({
+//     title: '提取本页', // %s表示选中的文字
+//     contexts: ['all'], 
+//     onclick: function(params,tab){
+//       chrome.tabs.sendMessage(tab.id, {"to":"inject","work":"collect_coupon"}, function(response){
+//       //console.warn(response);
+//       });
+//     }
+// });
 
 function notify(option,callback = function(){}){
   option["iconUrl"] = "images/get_started48.png";

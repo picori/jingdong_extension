@@ -4,8 +4,14 @@
   <head>
     <link rel="stylesheet" href="css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="css/jquery.datetimepicker.min.css" />
+    <style>
+      .bd-highlight {
+        border: 1px solid #FFFFFF;
+      }
+    </style>
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/jquery.datetimepicker.full.min.js"></script>
+    <script src="js/dateformat.js"></script>
     <script src="js/bootstrap.min.js"></script> 
     <script src="js/dexie.min.js"></script>
     <script src="js/csv.js"></script>
@@ -15,23 +21,53 @@
     <div class="panel">
       <div class="input-group">
         <div class="input-group-prepend">
-          <span class="input-group-text">信息</span>
-        </div>
-        <textarea class="form-control" id="coupon_info" aria-label="优惠券信息"></textarea>
-      </div>
-      <div class="input-group">
-        <div class="input-group-prepend">
           <span class="input-group-text">Key</span>
         </div>
         <input type="text" id="coupon_key" class="form-control" />
       </div>
-      <button type="button" class="btn btn-primary" id="add_coupon">添加优惠券</button>
       <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Roleid</span>
+        </div>
+        <input type="text" id="role_id" class="form-control" />
+      </div>
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text">To</span>
+        </div>
+        <input type="text" id="to" class="form-control" />
+      </div>      
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Name</span>
+        </div>
+        <input type="text" id="name" class="form-control" />
+      </div>
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Coupon URL</span>
+        </div>
+        <input type="text" id="coupon_url" class="form-control" />
+      </div>
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Click</span>
+        </div>
+        <input type="text" id="click" class="form-control" />
+      </div>
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Ajax</span>
+        </div>
+        <textarea class="form-control" id="ajax" aria-label="Ajax"></textarea>
+      </div>
+      <button type="button" class="btn btn-primary" id="add_coupon">添加优惠券</button>
+<!--       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text">执行时间</span>
         </div>
         <input type="text" id="datetimepicker" class="form-control" />
-      </div>
+      </div> -->
       <div class="accordion" id="accordion">
         <!--<a href="#" class="list-group-item list-group-item-action">Dapibus ac facilisis in</a>        
         <a href="#" class="list-group-item list-group-item-action list-group-item-primary">A simple primary list group item</a>

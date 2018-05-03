@@ -4,7 +4,7 @@
   "description": "Picori's Extension for Jingdong Login",
   "permissions": ["background","storage","contextMenus","tabs","webNavigation","webRequest","*://*.jd.com/*","*://*.jd.hk/*","webRequestBlocking","alarms","<all_urls>","notifications"],
   "options_page": "options.html",
-  "web_accessible_resources": ["js/inject.js","js/follow.js","js/jquery-3.3.1.min.js","js/dexie.min.js","js/jquery.datetimepicker.full.min.js"],
+  "web_accessible_resources": ["js/inject.js","js/follow.js","js/jquery-3.3.1.min.js","js/dexie.min.js","js/jquery.datetimepicker.full.min.js","js/dateformat.js"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": 
   [
