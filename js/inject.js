@@ -113,7 +113,7 @@ function clear_useless_coupon(){
           delete_coupon();
         }
       }
-      window.postMessage({"to":"background","work":"delete_coupon_complete","result":{deleted}}, '*');
+      //window.postMessage({"to":"background","work":"delete_coupon_complete","result":{deleted}}, '*');
     }
     console.warn(useable);    
     delete_coupon();        
@@ -125,17 +125,17 @@ function clear_useless_coupon(){
     console.warn("ShopSigned!");
     window.postMessage({"to":"background","work":"next","result":{"venderId": document.getElementById("vender_id").value,"beans":((document.querySelector(".jingdou .c-yellow")||{}).innerHTML * 1) || 0,"shopId":document.getElementById("shop_id").value}}, '*');
   }else if(window.location.href.match(/https?:\/\/www\.jd\.com\/error\.aspx/)){
-    window.postMessage({"to":"background","work":"next"}, '*');
+    window.postMessage({"to":"background","work":"error"}, '*');
   }else if(!window.location.href.match(/https?:\/\/mall\.jd\.com/)){
     $(function(){
       window.setTimeout(function(){
         console.warn("Time out next!");
-        window.postMessage({"to":"background","work":"next"}, '*');
+        window.postMessage({"to":"background","work":"error"}, '*');
       },5000)
     });
   }else{
-    if($("div.error h2:contains('抱歉，您请求的地址已下线或者过期')")){
-      return window.postMessage({"to":"background","work":"next"}, '*');
+    if($("div.error h2:contains('抱歉，您请求的地址已下线或者过期')").is(":visible")){
+      return window.postMessage({"to":"background","work":"error"}, '*');
     }
     let i = 0,key;
     while(key = window.localStorage.key(i++)){

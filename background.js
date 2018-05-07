@@ -7,6 +7,7 @@
 // 
 var list;
 var current_tab;
+var current_url;
 var sign_list;
 var last_operaton = "";
 var counter = 0;
@@ -121,15 +122,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     list = undefined;
   }
   function follow(callback){
-      let url = (list||[]).shift();
-      if(!url){        
+      current_url = (list||[]).shift();
+      if(!current_url){        
         notify({title:"All shops are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
         // console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
         // console.warn("All venders are followed!");  
         reset_summary();      
         return callback && callback();
       }
-      chrome.tabs.update(current_tab.id, {url},callback);
+      chrome.tabs.update(current_tab.id, {url:current_url},callback);
   }
   function fetchDatas(url_list,callback){
     if(url_list.length){
@@ -152,6 +153,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       return callback && callback();
     }
     let {url} = current;
+    current_url = url;
     chrome.tabs.update(current_tab.id, {url},callback);
   } 
   function fetchSignList(sign_list,callback){
@@ -173,6 +175,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           
         });
       }      
+    }else if(request["work"] == "error"){
+      if(!current_url){
+        return;
+      }
+      var match = current_url.match(/\-(\d+).html/);
+      counter++;
+      chrome.storage.local.remove(last_operaton + match[1],function(results){
+        console.warn(last_operaton + match[1]);
+      });
+      request["work"] = last_operaton;
     }
     if(request["work"] == "start_follow"){
       last_operaton = "follow";      
@@ -281,8 +293,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     chrome.storage.sync.get(null,function(items){
       var now = new Date().getTime();
       var next_minute = now - now % (60 * 1000) + 60 * 1000;
-      var schedules = Object.keys(items).filter(function(key){return new RegExp("^schedule"+next_minute).test(key);});
-      console.warn("schedule"+next_minute,schedules);
+      var schedules = Object.keys(items).filter(function(key){return key.match(/^schedule(\d+)/) && RegExp.$1 < next_minute; }).forEach(function(key){
+        console.warn(key + " is removed!",schedules);
+        chrome.storage.sync.remove(key);
+      });
+      var schedules =  Object.keys(items).filter(function(key){return new RegExp("^schedule"+next_minute).test(key);});
+      schedules.length && console.warn("schedule"+next_minute,schedules);
       schedules.forEach(function(key){
         var coupons = Object.values(items[key]);
         var offset; 
@@ -291,52 +307,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             if(coupon["script"]){
               eval(coupon["script"]);
             }else if(coupon["ajax"]){
-              console.warn(new Date().getTime());
-              $.ajax(coupon["ajax"]).done(function(result){
-                console.warn(result);
-                notify({title:"Coupon draw finished!",items:[{title:"returnMsg",message:result}]});
-              });
-            }            
-            // coupon["expired"] = new Date().getTime();
-            // console.warn("set coupon expired",coupon);
-            // chrome.storage.sync.set({[key] : coupon},function(results){
-            //   //console.warn(results);
-            // });
+              ajax(coupon);
+            } 
           },60 * 1000);
         });
-        // coupon["start_time"] = coupon["start_time"] || 0;
-        // coupon["expired"] = coupon["expired"] || 0;
-        // if( coupon["expired"] && coupon["expired"] < new Date().getTime() ){
-        //   console.warn("remove coupon \t",coupon)
-        //   chrome.storage.sync.remove(key,function(results){
-
-        //   });
-        //   return;
-        // }
-        // var offset; 
-        // console.warn(coupon["start_time"] - new Date().getTime())
-        // if((offset = coupon["start_time"] - new Date().getTime()) <= 60 * 1000){
-        //   console.warn(new Date().getTime(),key);
-        //   timers[key] = setTimeout(function(){
-        //     if(coupon["script"]){
-        //       eval(coupon["script"]);
-        //     }else if(coupon["ajax"]){
-        //       $.ajax(coupon["ajax"]).done(function(results){
-        //         console.warn(results);
-        //       });
-        //     }            
-        //     coupon["expired"] = new Date().getTime();
-        //     console.warn("set coupon expired",coupon);
-        //     chrome.storage.sync.set({[key] : coupon},function(results){
-        //       //console.warn(results);
-        //     });
-        //   },offset);
-        // } 
       });
     });
   }
   chrome.alarms.onAlarm.addListener(function(alarm){
-    console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
+    //console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
     process_coupon();
   });
   chrome.alarms.create("schedule", {
@@ -344,6 +323,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     periodInMinutes : 1
   })
 })()
+
+function ajax(coupon){
+  console.warn(new Date().getTime(),coupon);
+  $.ajax(coupon["ajax"]).done(function(result){
+    console.warn(result);
+    notify({title:"Coupon draw finished!",items:[{title:"returnMsg",message:result}]});
+  });
+}
 
 // //右键菜单
 // chrome.contextMenus.create({

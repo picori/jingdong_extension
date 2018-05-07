@@ -103,7 +103,7 @@ $(function(){
   $("#process_follow_storage").click(function(){
     //$(this).attr("disabled","disabled");
     chrome.storage.local.get(null,function(results){
-      console.warn(results);
+      //console.warn(results);
       list = Object.keys(results).filter(function(key){return /follow\d+/.test(key)}).map(function(key){return "https://mall.jd.com/index-" + results[key]["shopId"] + ".html"});//Object.values(results);
       chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow","list":list}, function(response) {
         console.log('收到来自后台的回复：' + response);
