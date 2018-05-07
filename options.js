@@ -22,14 +22,16 @@ function refresh_conpon_list(){
       var timeline_wrapper_div = $(`<div id="collapse${key}" class="collapse" aria-labelledby="heading${key}" data-parent="#accordion">`);
       var card_body = $(`<div class="card-body d-flex align-content-start bd-highlight flex-wrap"></div>`);
       var close_button = $(`<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>`);
-      operation_wrapper_div.append(close_button).append(coupon_a).append(delete_coupon).append(test_coupon).append(datetimepicker).append(add_schedule).appendTo(wrapper_div);
+      operation_wrapper_div.append(close_button).append(coupon_a).append(test_coupon).append(datetimepicker).append(add_schedule).appendTo(wrapper_div);
       timeline_wrapper_div.append(card_body).appendTo(wrapper_div);
       wrapper_div.appendTo("#accordion");
       test_coupon.click(function(){
         background_page.ajax(coupon);
       });
-      delete_coupon.click(function(){
-        chrome.storage.sync.remove(`coupon${key}`,refresh_conpon_list);
+      close_button.click(function(){
+        chrome.storage.sync.remove(key,function(){
+          refresh_conpon_list();
+        });
       });
       coupon_a.click(function(){
         $("#coupon_key").val(coupon.key);
@@ -88,27 +90,29 @@ function refresh_conpon_list(){
 
 
 $(function(){
+  $("#start_date").datetimepicker();
+  $("#end_date").datetimepicker();
   refresh_conpon_list();
   $("#add_coupon").click(function(){
     var key = $("#coupon_key").val().trim(),
       roleid = $("#role_id").val().trim(),
-      to = $("#to").val().trim(),
+      //to = $("#to").val().trim(),
       name = $("#name").val().trim(),
-      ajax = eval("("+$("#ajax").val().trim()+")"),
-      coupon_url = $("#coupon_url").val().trim(),
-      click = $("#click").val(),
+      ajax = $("#ajax").val().trim() ? eval("("+$("#ajax").val().trim()+")") : {},
+      //coupon_url = $("#coupon_url").val().trim(),
+      //click = $("#click").val(),
       start_date = $("#start_date").val().trim(),
       end_date = $("#end_date").val().trim(),
       memo = $("#memo").val().trim(),
-      coupon = {name,key,roleid,to,ajax,coupon_url,click,start_date,end_date,memo};
-    ajax.url && ( ajax.url = ajax.url.replace(/\[TIMESTAMP\]/g,new Date().getTime())
+      coupon = {name,key,roleid,ajax,start_date,end_date,memo};
+    ajax.url = "//s.m.jd.com/activemcenter/mfreecoupon/getcoupon?key=[KEY]&roleId=[ROLEID]&to=[TO]&sceneval=2&callback=jsonpCBKA&g_ty=ls".replace(/\[TIMESTAMP\]/g,new Date().getTime())
       .replace(/\[KEY\]/g,key)
       .replace(/\[ROLEID\]/g,roleid)
-      .replace(/\[TO\]/g,encodeURIComponent(to)) );
-    coupon.coupon_url && (coupon.coupon_url = coupon.coupon_url.replace(/\[TIMESTAMP\]/g,new Date().getTime())
+      .replace(/\[TO\]/g,encodeURIComponent(""));
+    coupon.coupon_url = "//coupon.m.jd.com/coupons/show.action?key=[KEY]&roleId=[ROLEID]&to=[TO]".replace(/\[TIMESTAMP\]/g,new Date().getTime())
       .replace(/\[KEY\]/g,key)
       .replace(/\[ROLEID\]/g,roleid)
-      .replace(/\[TO\]/g,encodeURIComponent(to)) );
+      .replace(/\[TO\]/g,encodeURIComponent(""));
     chrome.storage.sync.set({["coupon"+key] : coupon},function(){
       refresh_conpon_list();
     });

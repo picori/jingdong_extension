@@ -181,9 +181,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       }
       var match = current_url.match(/\-(\d+).html/);
       counter++;
-      chrome.storage.local.remove(last_operaton + match[1],function(results){
-        console.warn(last_operaton + match[1]);
-      });
+      if(match){
+        chrome.storage.local.remove(last_operaton + match[1],function(results){
+          console.warn(last_operaton + match[1]);
+        });
+      }      
       request["work"] = last_operaton;
     }
     if(request["work"] == "start_follow"){
@@ -307,9 +309,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             if(coupon["script"]){
               eval(coupon["script"]);
             }else if(coupon["ajax"]){
-              ajax(coupon);
+              ajax(coupon,next_minute);
             } 
-          },60 * 1000);
+          },60 * 1000 - 1000);
         });
       });
     });
@@ -324,11 +326,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   })
 })()
 
-function ajax(coupon){
-  console.warn(new Date().getTime(),coupon);
+function ajax(coupon,next_minute){
+  var now = new Date().getTime();
+  console.warn(now,coupon);
   $.ajax(coupon["ajax"]).done(function(result){
     console.warn(result);
     notify({title:"Coupon draw finished!",items:[{title:"returnMsg",message:result}]});
+    if(!result.match(/999/) && (now - next_minute <= 1000)){
+      ajax(coupon,next_minute);
+    }
   });
 }
 
