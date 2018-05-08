@@ -52,14 +52,14 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (e){
 //fake to be from same origin
 chrome.webRequest.onBeforeSendHeaders.addListener(
   function (details){
-    //console.warn(details.requestHeaders);
+    console.warn(details.requestHeaders);
     details.requestHeaders.forEach(function(header){
       if(header.name == "Referer"){
-        header.value = "https://a.jd.com";
+        header.value = "http://coupon.m.jd.com/coupons/show.action";
       }
     }) //push({name:"Access-Control-Allow-Origin",value:"*"});
     return {requestHeaders:details.requestHeaders}
-  }, {urls:["*://a.jd.com/*"]},
+  }, {urls:[/*"*://a.jd.com/*",*/"*://s.m.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
 // chrome.webRequest.onBeforeRequest.addListener(
@@ -327,8 +327,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 })()
 
 function ajax(coupon,next_minute){
+  window["jsonpCBKA"] = window["jsonpCBKA"] || function (result){
+    return result;
+  }
   var now = new Date().getTime();
-  //console.warn(now,coupon,result);
+  coupon["ajax"]["cache"] = false;
   $.ajax(coupon["ajax"]).done(function(result){
     result = eval(result);
     console.warn(now,coupon,result);
@@ -340,9 +343,6 @@ function ajax(coupon,next_minute){
   });
 }
 
-function getcoupon(result){
-  return result;
-}
 // //右键菜单
 // chrome.contextMenus.create({
 //     title: '提取本页', // %s表示选中的文字

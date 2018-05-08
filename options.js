@@ -26,7 +26,7 @@ function refresh_conpon_list(){
       timeline_wrapper_div.append(card_body).appendTo(wrapper_div);
       wrapper_div.appendTo("#accordion");
       test_coupon.click(function(){
-        background_page.ajax(coupon);
+        background_page.ajax(coupon,new Date().getTime());
       });
       close_button.click(function(){
         chrome.storage.sync.remove(key,function(){
@@ -105,7 +105,7 @@ $(function(){
       end_date = $("#end_date").val().trim(),
       memo = $("#memo").val().trim(),
       coupon = {name,key,roleid,ajax,start_date,end_date,memo};
-    ajax.url = "//s.m.jd.com/activemcenter/mfreecoupon/getcoupon?key=[KEY]&roleId=[ROLEID]&to=[TO]&sceneval=2&callback=jsonpCBKA&g_ty=ls".replace(/\[TIMESTAMP\]/g,new Date().getTime())
+    ajax.url = "https://s.m.jd.com/activemcenter/mfreecoupon/getcoupon?key=[KEY]&roleId=[ROLEID]&to=[TO]&sceneval=2&callback=jsonpCBKA&g_ty=ls".replace(/\[TIMESTAMP\]/g,new Date().getTime())
       .replace(/\[KEY\]/g,key)
       .replace(/\[ROLEID\]/g,roleid)
       .replace(/\[TO\]/g,encodeURIComponent(""));
