@@ -311,7 +311,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             }else if(coupon["ajax"]){
               ajax(coupon,next_minute);
             } 
-          },60 * 1000 - 1000);
+          },60 * 1000 - 500);
         });
       });
     });
@@ -328,16 +328,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 
 function ajax(coupon,next_minute){
   var now = new Date().getTime();
-  console.warn(now,coupon);
+  //console.warn(now,coupon,result);
   $.ajax(coupon["ajax"]).done(function(result){
-    console.warn(result);
-    notify({title:"Coupon draw finished!",items:[{title:"returnMsg",message:result}]});
-    if(!result.match(/999/) && (now - next_minute <= 1000)){
+    result = eval(result);
+    console.warn(now,coupon,result);
+    if( next_minute && (now - next_minute <= 500) && (result.ret != 999) ){
       ajax(coupon,next_minute);
+    }else{
+      notify({title:"Coupon draw finished!",items:[{title:"msg",message:JSON.stringify(result)}]});
     }
   });
 }
 
+function getcoupon(result){
+  return result;
+}
 // //右键菜单
 // chrome.contextMenus.create({
 //     title: '提取本页', // %s表示选中的文字
