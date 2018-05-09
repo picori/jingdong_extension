@@ -26,7 +26,7 @@ function refresh_conpon_list(){
       timeline_wrapper_div.append(card_body).appendTo(wrapper_div);
       wrapper_div.appendTo("#accordion");
       test_coupon.click(function(){
-        background_page.ajax(coupon,new Date().getTime());
+        background_page.ajax(coupon);
       });
       close_button.click(function(){
         chrome.storage.sync.remove(key,function(){
