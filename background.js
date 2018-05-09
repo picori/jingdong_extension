@@ -55,11 +55,17 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     console.warn(details.requestHeaders);
     details.requestHeaders.forEach(function(header){
       if(header.name == "Referer"){
-        header.value = "http://coupon.m.jd.com/coupons/show.action";
+        header.value = "http://a.jd.com";
       }
     }) //push({name:"Access-Control-Allow-Origin",value:"*"});
     return {requestHeaders:details.requestHeaders}
-  }, {urls:[/*"*://a.jd.com/*",*/"*://s.m.jd.com/*"]},
+  }, {urls:["*://a.jd.com/*"]},
+  ["blocking","requestHeaders"]);
+
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function (details){
+    return {cancel:true};
+  }, {urls:["*://uranus.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
 // chrome.webRequest.onBeforeRequest.addListener(
@@ -309,7 +315,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             if(coupon["script"]){
               eval(coupon["script"]);
             }else if(coupon["ajax"]){
-              ajax(coupon,next_minute);
+              ajax(coupon/*,next_minute*/);
             } 
           },60 * 1000 - 500);
         });
@@ -335,8 +341,8 @@ function ajax(coupon,next_minute){
   $.ajax(coupon["ajax"]).done(function(result){
     result = eval(result);
     console.warn(now,coupon,result);
-    if( next_minute && (now - next_minute <= 500) && (result.ret != 999) ){
-      ajax(coupon,next_minute);
+    if( next_minute && (now - next_minute <= 1000) && (result.ret != 999) ){
+      setTimeout(function(){ajax(coupon,next_minute)},Math.random() * 100 + 100);
     }else{
       notify({title:"Coupon draw finished!",items:[{title:"msg",message:JSON.stringify(result)}]});
     }
