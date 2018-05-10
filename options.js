@@ -105,11 +105,11 @@ $(function(){
       end_date = $("#end_date").val().trim(),
       memo = $("#memo").val().trim(),
       coupon = {name,key,roleid,ajax,start_date,end_date,memo};
-    ajax.url = "https://s.m.jd.com/activemcenter/mfreecoupon/getcoupon?key=[KEY]&roleId=[ROLEID]&to=[TO]&sceneval=2&callback=jsonpCBKA&g_ty=ls".replace(/\[TIMESTAMP\]/g,new Date().getTime())
+    ajax.url = ajax.url || "https://s.m.jd.com/activemcenter/mfreecoupon/getcoupon?key=[KEY]&roleId=[ROLEID]&to=[TO]&sceneval=2&callback=jsonpCBKA&g_ty=ls".replace(/\[TIMESTAMP\]/g,new Date().getTime())
       .replace(/\[KEY\]/g,key)
       .replace(/\[ROLEID\]/g,roleid)
       .replace(/\[TO\]/g,encodeURIComponent(""));
-    coupon.coupon_url = "//coupon.m.jd.com/coupons/show.action?key=[KEY]&roleId=[ROLEID]&to=[TO]".replace(/\[TIMESTAMP\]/g,new Date().getTime())
+    coupon.coupon_url = coupon.coupon_url || "//coupon.m.jd.com/coupons/show.action?key=[KEY]&roleId=[ROLEID]&to=[TO]".replace(/\[TIMESTAMP\]/g,new Date().getTime())
       .replace(/\[KEY\]/g,key)
       .replace(/\[ROLEID\]/g,roleid)
       .replace(/\[TO\]/g,encodeURIComponent(""));

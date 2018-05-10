@@ -315,7 +315,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             if(coupon["script"]){
               eval(coupon["script"]);
             }else if(coupon["ajax"]){
-              ajax(coupon/*,next_minute*/);
+              ajax(coupon,next_minute);
             } 
           },60 * 1000 - 500);
         });
@@ -342,7 +342,7 @@ function ajax(coupon,next_minute){
     result = eval(result);
     console.warn(now,coupon,result);
     if( next_minute && (now - next_minute <= 1000) && (result.ret != 999) ){
-      setTimeout(function(){ajax(coupon,next_minute)},Math.random() * 100 + 100);
+      setTimeout(function(){ajax(coupon,next_minute)},Math.random() * 100 + 150);
     }else{
       notify({title:"Coupon draw finished!",items:[{title:"msg",message:JSON.stringify(result)}]});
     }

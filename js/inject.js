@@ -101,13 +101,14 @@ function clear_useless_coupon(){
         console.warn(result);
       }
       if(coupon = useable.shift()){
-        if(coupon.shopName /* || ( coupon.discount / coupon.quota ) <= 0.2 */){
+        var filters = [/全品类\(特例商品除外\)/,/话费充值/,/AppStore/];
+        if(coupon.shopName || !filters.find(function(filter){return filter.test(coupon.limitStr)}) || ( coupon.discount / coupon.quota ) <= 0.2 ) {
           $.ajax({url:"https:////wq.jd.com/activeapi/deletejdcoupon?",dataType: 'jsonp',data:{
             couponid: coupon.couponid || "",
             batchid: coupon.batchid || "",
             passkey: coupon.passKey || "",
             sceneval: 2 ,
-          }}).then(delete_coupon,console.delete_coupon);
+          }}).then(delete_coupon,delete_coupon);
         }else{
           console.warn("pass",coupon);
           delete_coupon();
