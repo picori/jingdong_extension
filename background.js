@@ -128,15 +128,43 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     list = undefined;
   }
   function follow(callback){
-      current_url = (list||[]).shift();
-      if(!current_url){        
-        notify({title:"All shops are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
-        // console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
-        // console.warn("All venders are followed!");  
-        reset_summary();      
-        return callback && callback();
-      }
-      chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    var match;
+    current_url = (list||[]).shift();
+    if(!current_url){
+      notify({title:"All shops are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+      reset_summary();      
+      return callback && callback();
+    }
+    chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    // if(match = current_url.match(/https?:\/\/mall\.jd\.com\/index\-(\d+)\.html/)){
+    //   $.ajax({url:current_url}).done(function(page){
+    //     var vender_id,shop_id;
+    //     if(page.match(/<input type="hidden" id="vender_id" value="(\d+)" \/>/)){
+    //       vender_id = RegExp.$1;
+    //     }
+    //     if(page.match(/<input type="hidden" id="shop_id" value="(\d+)" \/>/)){
+    //       shop_id = RegExp.$1;
+    //     }
+    //     $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).done(function(data){
+    //       console.warn(data);
+    //       if(data.result && data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
+    //         $.ajax({
+    //           url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
+    //           data: {
+    //               vId: vender_id,
+    //               jshop_token: data.jshop_token,
+    //               aId: data.giftList[0] ? data.giftList[0].activityId : 0
+    //           },
+    //           dataType: 'html'
+    //         }).done(function(result){
+    //           console.warn(result);
+    //         });
+    //       }else{
+    //         follow();
+    //       }
+    //     });
+    //   });      
+    // }
   }
   function fetchDatas(url_list,callback){
     if(url_list.length){
@@ -151,10 +179,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
   function sign(callback){
     let current = (list||[]).shift();
-    if(!current){      
+    if(!current){
       notify({title:"All shops are signed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
-      // console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
-      // console.warn("All venders are signed!"); 
       reset_summary();     
       return callback && callback();
     }
