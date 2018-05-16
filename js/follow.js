@@ -1178,9 +1178,13 @@ if (getPageType() === 1) {
             //     }
             // });
             modalWrap.find('.J_drawGift').click(function() {
-                drawGift(giftList[0] ? giftList[0].activityId : '');
-                modalWrap.remove();
-                modalMask.remove();
+                if(giftList.find(function(item,index,list){return item.prizeType == 4})){
+                    drawGift(giftList[0] ? giftList[0].activityId : '');
+                }else{
+                    window.postMessage({"to":"background","work":"next","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');
+                }                
+                //modalWrap.remove();
+                //modalMask.remove();
             });
         };
         window.venderGift = function() {
