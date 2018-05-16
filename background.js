@@ -135,36 +135,52 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       reset_summary();      
       return callback && callback();
     }
-    chrome.tabs.update(current_tab.id, {url:current_url},callback);
-    // if(match = current_url.match(/https?:\/\/mall\.jd\.com\/index\-(\d+)\.html/)){
-    //   $.ajax({url:current_url}).done(function(page){
-    //     var vender_id,shop_id;
-    //     if(page.match(/<input type="hidden" id="vender_id" value="(\d+)" \/>/)){
-    //       vender_id = RegExp.$1;
-    //     }
-    //     if(page.match(/<input type="hidden" id="shop_id" value="(\d+)" \/>/)){
-    //       shop_id = RegExp.$1;
-    //     }
-    //     $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).done(function(data){
-    //       console.warn(data);
-    //       if(data.result && data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
-    //         $.ajax({
-    //           url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
-    //           data: {
-    //               vId: vender_id,
-    //               jshop_token: data.jshop_token,
-    //               aId: data.giftList[0] ? data.giftList[0].activityId : 0
-    //           },
-    //           dataType: 'html'
-    //         }).done(function(result){
-    //           console.warn(result);
-    //         });
-    //       }else{
-    //         follow();
-    //       }
-    //     });
-    //   });      
-    // }
+    //chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    if(match = current_url.match(/https?:\/\/mall\.jd\.com\/index\-(\d+)\.html/)){
+      function getIndexPage(url,callback){
+        return $.ajax({url:current_url,dataType:"html"}).done(function(page){callback(page)});
+      }
+      function getShopGiftInfo(page){
+        
+      }
+      $.ajax({url:current_url,dataType:"html"}).done(function(page){
+        var vender_id,shop_id;
+        if(page.match(/<input type="hidden" id="vender_id" value="(\d+)" \/>/)){
+          vender_id = RegExp.$1;
+        }
+        if(page.match(/<input type="hidden" id="shop_id" value="(\d+)" \/>/)){
+          shop_id = RegExp.$1;
+        }
+        $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).done(function(data){
+          console.warn(data);
+          if(data.result && data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
+            $.ajax({
+              url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
+              data: {
+                  vId: vender_id,
+                  jshop_token: data.jshop_token,
+                  aId: data.giftList[0] ? data.giftList[0].activityId : 0
+              },
+              dataType: 'html'
+            }).done(function(response){
+              try{
+                response = eval(response);
+              }catch(e){
+
+              }
+              if(response.result){
+                beans += (data.giftList.find(function(item,index,list){return item.prizeType == 4})||{}).discount || 0;
+              }              
+              next();
+            }).fail(function(){
+              next();
+            });
+          }else{
+            next();
+          }
+        });
+      });      
+    }
   }
   function fetchDatas(url_list,callback){
     if(url_list.length){
@@ -191,6 +207,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   function fetchSignList(sign_list,callback){
     list = sign_list;
     callback && callback();
+  }
+  function next(operation){
+    operation = operation || last_operaton;
+    counter++;
+    if(operation == "follow"){
+      follow();
+    }else if(operation == "sign"){
+      sign();
+    }
   }
   if(request["to"] == "background"){
     if(request["work"] == "next"){

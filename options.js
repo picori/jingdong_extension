@@ -96,7 +96,7 @@ $(function(){
   $("#add_coupon").click(function(){
     var key = $("#coupon_key").val().trim(),
       roleid = $("#role_id").val().trim(),
-      //to = $("#to").val().trim(),
+      to = "m.jd.com" || $("#to").val().trim(),
       name = $("#name").val().trim(),
       ajax = $("#ajax").val().trim() ? eval("("+$("#ajax").val().trim()+")") : {},
       //coupon_url = $("#coupon_url").val().trim(),
