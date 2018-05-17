@@ -130,57 +130,67 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   function follow(callback){
     var match;
     current_url = (list||[]).shift();
+    console.warn(current_url);
     if(!current_url){
       notify({title:"All shops are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
       reset_summary();      
       return callback && callback();
     }
     //chrome.tabs.update(current_tab.id, {url:current_url},callback);
-    if(match = current_url.match(/https?:\/\/mall\.jd\.com\/index\-(\d+)\.html/)){
-      function getIndexPage(url,callback){
-        return $.ajax({url:current_url,dataType:"html"}).done(function(page){callback(page)});
-      }
-      function getShopGiftInfo(page){
-        
-      }
-      $.ajax({url:current_url,dataType:"html"}).done(function(page){
-        var vender_id,shop_id;
-        if(page.match(/<input type="hidden" id="vender_id" value="(\d+)" \/>/)){
-          vender_id = RegExp.$1;
-        }
-        if(page.match(/<input type="hidden" id="shop_id" value="(\d+)" \/>/)){
-          shop_id = RegExp.$1;
-        }
-        $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).done(function(data){
-          console.warn(data);
-          if(data.result && data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
-            $.ajax({
-              url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
-              data: {
-                  vId: vender_id,
-                  jshop_token: data.jshop_token,
-                  aId: data.giftList[0] ? data.giftList[0].activityId : 0
-              },
-              dataType: 'html'
-            }).done(function(response){
-              try{
-                response = eval(response);
-              }catch(e){
-
-              }
-              if(response.result){
-                beans += (data.giftList.find(function(item,index,list){return item.prizeType == 4})||{}).discount || 0;
-              }              
-              next();
-            }).fail(function(){
-              next();
-            });
-          }else{
-            next();
-          }
-        });
-      });      
+    function getIndexPage(url,cb){
+      return $.ajax({url,dataType:"html"}).then(function(page){
+        cb(page);
+      },function(reject){
+        console.warn(reject);
+        follow(cb);
+      });
     }
+    function getShopGiftInfo(page){
+      var vender_id,shop_id;
+      if(page.match(/<input type="hidden" id="vender_id" value="(\d+)" \/>/)){
+        vender_id = RegExp.$1;
+      }
+      if(page.match(/<input type="hidden" id="shop_id" value="(\d+)" \/>/)){
+        shop_id = RegExp.$1;
+      }
+      if(!vender_id || !shop_id){
+        return next();
+      }
+      $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).then(function(data){
+        console.warn(data);
+        if(data.result && data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
+          $.ajax({
+            url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
+            data: {
+                vId: vender_id,
+                jshop_token: data.jshop_token,
+                aId: data.giftList[0] ? data.giftList[0].activityId : 0
+            },
+            dataType: 'html'
+          }).then(function(response){
+            try{
+              response = eval(response);
+            }catch(e){
+
+            }
+            if(response.result){
+              let {discount=0} = data.giftList.find(function(item,index,list){return item.prizeType == 4});
+              beans += discount;
+              notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: discount},{title:"Current Total Beans",message:beans}]});
+            }              
+            return next();
+          },next);
+        }else{
+          return next();
+        }
+      },next);
+    }
+    getIndexPage(current_url,getShopGiftInfo);
+    // if(match = current_url.match(/https?:\/\/mall\.jd\.com\/index\-(\d+)\.html/)){         
+    //   getIndexPage(current_url,getShopGiftInfo);
+    // }else{
+
+    // }
   }
   function fetchDatas(url_list,callback){
     if(url_list.length){
@@ -208,12 +218,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     list = sign_list;
     callback && callback();
   }
-  function next(operation){
-    operation = operation || last_operaton;
+  function next(reject){
+    reject && console.warn(reject);
     counter++;
-    if(operation == "follow"){
+    if(last_operaton == "follow"){
       follow();
-    }else if(operation == "sign"){
+    }else if(last_operaton == "sign"){
       sign();
     }
   }
