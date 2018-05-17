@@ -141,7 +141,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       return $.ajax({url,dataType:"html"}).then(function(page){
         cb(page);
       },function(reject){
-        console.warn(reject);
+        //console.warn(reject);
         follow(cb);
       });
     }
@@ -169,9 +169,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             dataType: 'html'
           }).then(function(response){
             try{
-              response = eval(response);
+              response = JSON.parse(response);
             }catch(e){
-
+              console.warn(e);
             }
             if(response.result){
               let {discount=0} = data.giftList.find(function(item,index,list){return item.prizeType == 4});
