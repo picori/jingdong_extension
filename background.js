@@ -68,14 +68,25 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   }, {urls:["*://uranus.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
-// chrome.webRequest.onBeforeRequest.addListener(
-//   function (e){
-//     console.warn(e);
-//     chrome.tabs.sendMessage(e.tabId, {"to":"inject","work":"drawShopGiftInfo","venderId":e.url.match(/v(?:ender)?Id=(\d+)&/)[1],"function":e.url.match(/callback=(jQuery\d+)&/)[1]}, function(response)
-//     {
-//       //console.warn(response);
-//     });
-//   }, {urls:["*://f-mall.jd.com/shopGift/drawShopGiftInfo*"]});
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function (details){
+    for (var i = 0; i < details.requestHeaders.length; ++i) {
+      if (details.requestHeaders[i].name === 'User-Agent') {
+        details.requestHeaders[i].value = "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_3 like Mac OS X) AppleWebKit/603.3.8 (KHTML, like Gecko) Mobile/14G60/application=JDJR-App&deviceId=249205E2-74D3-4D3B-A3B3-B6F7F0EFC5CE&clientType=ios&iosType=iphone&clientVersion=4.9.2&HiClVersion=4.9.2&isUpdate=0&osVersion=10.3.3&osName=iOS&platform=iPhone 6 (A1549/A1586)&screen=667*375&src=App Store&ip=192.168.100.55&mac=02:00:00:00:00:00&netWork=1&sPoint=MTUwMDMjI3Nob3V5ZTUwMDE%3D&jdPay=(*#@jdPaySDK*#@jdPayChannel=jdfinance&jdPayChannelVersion=4.9.2&jdPaySdkVersion=2.18.0.0&jdPayClientName=iOS*#@jdPaySDK*#@)"
+        return {requestHeaders:details.requestHeaders}
+      }
+    }
+  }, {urls:["*://m.jr.jd.com/*"]},
+  ["blocking","requestHeaders"]);
+
+  // chrome.webRequest.onBeforeRequest.addListener(
+  //   function (e){
+  //     console.warn(e);
+  //     chrome.tabs.sendMessage(e.tabId, {"to":"inject","work":"drawShopGiftInfo","venderId":e.url.match(/v(?:ender)?Id=(\d+)&/)[1],"function":e.url.match(/callback=(jQuery\d+)&/)[1]}, function(response)
+  //     {
+  //       //console.warn(response);
+  //     });
+  //   }, {urls:["*://f-mall.jd.com/shopGift/drawShopGiftInfo*"]});
 
 function fetchTab(callback){
   chrome.tabs.query({index:0}, function (tabs){
