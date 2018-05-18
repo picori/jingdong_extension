@@ -79,6 +79,15 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   }, {urls:["*://m.jr.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
+chrome.webRequest.onBeforeRequest.addListener(
+  function(details) {
+    return {cancel: true};
+  },
+  {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207",
+  "*://payrisk.jd.com/js/m.js"]},
+  ["blocking"]
+);
+
   // chrome.webRequest.onBeforeRequest.addListener(
   //   function (e){
   //     console.warn(e);
@@ -99,13 +108,6 @@ function fetchTab(callback){
 }
 
 function addBlocker(tab){
-  chrome.webRequest.onBeforeRequest.addListener(
-    function(details) {
-      return {cancel: true};
-    },
-    {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207"],tabId:tab.id},
-    ["blocking"]
-  );
   // chrome.webRequest.onBeforeSendHeaders.addListener(
   //   function(details) {
   //     //console.warn(details.requestHeaders);
