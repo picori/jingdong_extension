@@ -20,13 +20,17 @@ function injectCustomJs(jsPath)
   document.head.appendChild(temp);
 }
 
-injectCustomJs('js/inject.js');
-injectCustomJs('js/follow.js');
+if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)/)){
+  injectCustomJs('js/inject.js');
+  injectCustomJs('js/follow.js');
+}
 
-// window.addEventListener("message", function(e)
-// {
-//   console.log(e.data);
-// }, false);
+if(window.location.href.match(/https?:\/\/m\.jdpay\.(com|hk)/)){
+  console.warn(window.location.href);
+  injectCustomJs('js/m.js');
+}else{
+  console.warn(window.location.href);
+}
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {

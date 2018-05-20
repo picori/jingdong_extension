@@ -960,16 +960,6 @@ function getJdEid() {
     try {
         "" == _JdEid && (m.eid = td_collect.obtainLocal(!0)), m.token = jd_risk_token_id
     } catch (h) {}
-    $.ajax({url:"/marketing/jdm/takeprize/direct",type:"POST",data:{
-        "entranceId":"aCUDh3dkeKaIHk",
-        "eid": m.eid,
-        "token": m.token,
-        "source": "H5",
-        "browser": window.navigator.userAgent,
-    }}).done(function(response){
-        console.warn(response);
-    });
-
     return m
 }
 

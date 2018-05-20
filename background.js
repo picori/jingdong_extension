@@ -79,14 +79,14 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   }, {urls:["*://m.jr.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
-chrome.webRequest.onBeforeRequest.addListener(
-  function(details) {
-    return {cancel: true};
-  },
-  {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207",
-  "*://payrisk.jd.com/js/m.js"]},
-  ["blocking"]
-);
+// chrome.webRequest.onBeforeRequest.addListener(
+//   function(details) {
+//     return {cancel: true};
+//   },
+//   {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207",
+//   "*://payrisk.jd.com/js/m.js"]},
+//   ["blocking"]
+// );
 
   // chrome.webRequest.onBeforeRequest.addListener(
   //   function (e){
@@ -169,9 +169,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       if(!vender_id || !shop_id){
         return next();
       }
+      //chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
       $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).then(function(data){
-        console.warn(data);
+
         if(data.result && data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
+          chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
           $.ajax({
             url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
             data: {
@@ -193,7 +195,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             }              
             return next();
           },next);
-        }else{
+        }else{          
+          if(data.message.match(/获取店铺礼包信息失败/)){
+            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
+          }else if(data.message.match(/店铺未开通礼包活动/)){
+            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
+          }
+          console.warn(data);
           return next();
         }
       },next);

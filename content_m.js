@@ -6,6 +6,9 @@
 
 
 
+
+
+
 var actualCode =  '(' + function() {
     'use strict';
     var navigator = window.navigator;
@@ -55,3 +58,4 @@ if( window.location.href.match(/^https:\/\/m.jr.jd.com/)){
   document.documentElement.appendChild(s);
   s.remove();
 }
+

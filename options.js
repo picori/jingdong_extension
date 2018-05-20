@@ -103,19 +103,27 @@ $(function(){
       //click = $("#click").val(),
       start_date = $("#start_date").val().trim(),
       end_date = $("#end_date").val().trim(),
+      is_jinrong = $("#jinrong:checked").length,
       memo = $("#memo").val().trim(),
-      coupon = {name,key,roleid,ajax,start_date,end_date,memo};
-    ajax.url = ajax.url || "https://s.m.jd.com/activemcenter/mfreecoupon/getcoupon?key=[KEY]&roleId=[ROLEID]&to=[TO]&sceneval=2&callback=jsonpCBKA&g_ty=ls".replace(/\[TIMESTAMP\]/g,new Date().getTime())
-      .replace(/\[KEY\]/g,key)
-      .replace(/\[ROLEID\]/g,roleid)
-      .replace(/\[TO\]/g,encodeURIComponent(""));
-    coupon.coupon_url = coupon.coupon_url || "//coupon.m.jd.com/coupons/show.action?key=[KEY]&roleId=[ROLEID]&to=[TO]".replace(/\[TIMESTAMP\]/g,new Date().getTime())
-      .replace(/\[KEY\]/g,key)
-      .replace(/\[ROLEID\]/g,roleid)
-      .replace(/\[TO\]/g,encodeURIComponent(""));
-    chrome.storage.sync.set({["coupon"+key] : coupon},function(){
-      refresh_conpon_list();
-    });
+      coupon = {name,key,roleid,ajax,start_date,end_date,memo,is_jinrong};
+    if(is_jinrong){
+      $.ajax({url:"https://payrisk.jd.com/m.html",dataType:"html"}).done(function(html){
+        console.warn(html);
+      });
+    }else{
+      ajax.url = ajax.url || "https://s.m.jd.com/activemcenter/mfreecoupon/getcoupon?key=[KEY]&roleId=[ROLEID]&to=[TO]&sceneval=2&callback=jsonpCBKA&g_ty=ls".replace(/\[TIMESTAMP\]/g,new Date().getTime())
+        .replace(/\[KEY\]/g,key)
+        .replace(/\[ROLEID\]/g,roleid)
+        .replace(/\[TO\]/g,encodeURIComponent(""));
+      coupon.coupon_url = coupon.coupon_url || "//coupon.m.jd.com/coupons/show.action?key=[KEY]&roleId=[ROLEID]&to=[TO]".replace(/\[TIMESTAMP\]/g,new Date().getTime())
+        .replace(/\[KEY\]/g,key)
+        .replace(/\[ROLEID\]/g,roleid)
+        .replace(/\[TO\]/g,encodeURIComponent(""));
+      chrome.storage.sync.set({["coupon"+key] : coupon},function(){
+        refresh_conpon_list();
+      });
+    }
+    
   });
   $("#clear_useless_coupon").click(function(){
     chrome.tabs.query({index:0}, function(tabs){
@@ -123,6 +131,11 @@ $(function(){
       chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"option","work":"clear_useless_coupon"}, function(response){
           //if(callback) callback(response);
       });
+    });    
+  });
+  $("#test_coupon").click(function(){
+    $.ajax({url:"m.jdpay.com/marketing/jdm/takeprize?entranceId=aCUDh3dkeKaIHk&",dataType:"html"}).then(function(page){
+      page
     });    
   })
 })
