@@ -107,8 +107,25 @@ $(function(){
       memo = $("#memo").val().trim(),
       coupon = {name,key,roleid,ajax,start_date,end_date,memo,is_jinrong};
     if(is_jinrong){
-      $.ajax({url:"https://payrisk.jd.com/m.html",dataType:"html"}).done(function(html){
-        console.warn(html);
+      // $.ajax({url:"https://payrisk.jd.com/m.html",dataType:"html"}).done(function(html){
+      //   let match,jd_risk_token_id,jd_jr_td_risk_pin;
+      //   if(match = html.match(/jd_risk_token_id\s*=\s*'([^']+)'/)){
+      //     jd_risk_token_id = match[1];
+      //   }
+      //   if(match = html.match(/jd_jr_td_risk_pin\s*=\s*'([^']+)'/)){
+      //     jd_jr_td_risk_pin = match[1];
+      //   }
+      //   console.warn(html);
+      // });
+      coupon.ajax = {url:"https://m.jdpay.com/marketing/jdm/takeprize/direct",type:"POST",data:{
+        "entranceId": key,
+        "eid": "35CHJUTPIDBS5YY6RZI7M6IIR7J7VDS7SJJ4QYAERSFFTT6ZRZQHBV4AVM3CZCDGHICNPMRUINGGMF37PJ2FD2SYAY",
+        "token": "LNW6JHEJX5CQ75TAAF3P7F24HQSYSDWZK7B4CEAMFSW3TAWFT7VJZCRWKI3LMW42IXRQIDM6534TS",
+        "source": "H5",
+        "browser": window.navigator.userAgent,
+      },dataType:"html"};
+      chrome.storage.sync.set({["coupon"+key] : coupon},function(){
+        refresh_conpon_list();
       });
     }else{
       ajax.url = ajax.url || "https://s.m.jd.com/activemcenter/mfreecoupon/getcoupon?key=[KEY]&roleId=[ROLEID]&to=[TO]&sceneval=2&callback=jsonpCBKA&g_ty=ls".replace(/\[TIMESTAMP\]/g,new Date().getTime())
