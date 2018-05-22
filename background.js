@@ -235,8 +235,44 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     current_url = url;
     chrome.tabs.update(current_tab.id, {url},callback);
   } 
+  function draw(callback){
+    var match,
+    current_code = (list||[]).shift();
+    console.warn(current_code);
+    if(!current_code){
+      notify({title:"All shops are drawed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+      reset_summary();      
+      return callback && callback();
+    }
+    function drawLottery(lottery_code,cb){
+      return $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?callback=jQuery4904083&lotteryCode=${lottery_code}`,cache:false,dataType:"html"}).then(function(result){
+        console.warn(result);
+        try{
+          result = eval(result.replace(/^jQuery4904083/,""));
+        }catch(e){
+          result = {"data":{"chances":0,"downgradeCanNotWin":false,"pass":true,"promptMsg":"错误！","userPin":"picori","winner":false}};
+        }
+        if(result["data"]["winner"]){
+          notify({title:"You are lucky!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"current_code",message: JSON.stringify(result["data"])}]});
+        }
+        if(result["data"]["chances"]){
+          drawLottery(current_code,cb);
+        }else{
+          cb();
+        }
+      },function(reject){
+        //console.warn(reject);
+        draw(cb);
+      });
+    }
+    drawLottery(current_code,draw);
+  }
   function fetchSignList(sign_list,callback){
     list = sign_list;
+    callback && callback();
+  }
+  function fetchDrawList(draw_list,callback){
+    list = draw_list;
     callback && callback();
   }
   function next(reject){
@@ -246,6 +282,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       follow();
     }else if(last_operaton == "sign"){
       sign();
+    }else if(last_operaton == "draw"){
+      draw();
     }
   }
   if(request["to"] == "background"){
@@ -304,6 +342,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       fetchTab(function(){
         sign(function(result){
           //console.warn(result);
+        });
+      });
+    }else if(request["work"] == "start_draw"){
+      //return console.warn(request["list"]);
+      last_operaton = "draw";
+      fetchDrawList(request["list"],function(){
+        fetchTab(function(){
+          draw(function(result){            
+            //console.warn(result);
+          });
         });
       });
     }else if(request["work"] == "collect_coupon"){

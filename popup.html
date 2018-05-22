@@ -27,7 +27,7 @@
   	<nav class="navbar">
   		<a href="#" class="focus">关注</a>
 		  <a href="#">签到</a>
-      <a href="#">券</a>
+      <a href="#">抽奖</a>
   	</nav>
   	<div class="panel focus">
 	    <textarea style="width:300px;height:500px;" id="url_list" name="url_list"></textarea>
@@ -37,40 +37,9 @@
   	    <textarea style="width:300px;height:500px;" id="sign_list" name="sign_list"></textarea>
   	    <div><button id="clear_sign">清空</button><button id="process_sign">签到</button><button id="process_sign_storage">数据库签到</button><button id="download_sign_storage">下载</button></div>
   	</div>
-    <div class="panel" style="width:100%;">
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text">信息</span>
-        </div>
-        <textarea class="form-control" id="coupon_info" aria-label="优惠券信息"></textarea>
-      </div>
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text">Key</span>
-        </div>
-        <input type="text" id="coupon_key" class="form-control" />
-      </div>
-      <button type="button" class="btn btn-primary" id="add_coupon">添加优惠券</button>
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text">执行时间</span>
-        </div>
-        <input type="text" id="datetimepicker" class="form-control" />
-      </div>
-      <div class="list-group" id="coupon_list">
-        <!--<a href="#" class="list-group-item list-group-item-action">Dapibus ac facilisis in</a>        
-        <a href="#" class="list-group-item list-group-item-action list-group-item-primary">A simple primary list group item</a>
-        <a href="#" class="list-group-item list-group-item-action list-group-item-secondary">A simple secondary list group item</a>
-        <a href="#" class="list-group-item list-group-item-action list-group-item-success">A simple success list group item</a>
-        <a href="#" class="list-group-item list-group-item-action list-group-item-danger">A simple danger list group item</a>
-        <a href="#" class="list-group-item list-group-item-action list-group-item-warning">A simple warning list group item</a>
-        <a href="#" class="list-group-item list-group-item-action list-group-item-info">A simple info list group item</a>
-        <a href="#" class="list-group-item list-group-item-action list-group-item-light">A simple light list group item</a>
-        <a href="#" class="list-group-item list-group-item-action list-group-item-dark">A simple dark list group item</a>-->
-      </div>
-      <table class="table collapse" id="timeline">
-        
-      </table>`
+    <div class="panel">
+        <textarea style="width:300px;height:500px;" id="lottery_list" name="lottery_list"></textarea>
+        <div><button id="clear_lottery">清空</button><button id="draw_lottery">抽奖</button><button id="draw_lottery_from_storage">数据库抽奖</button><button id="download_draw_storage">下载</button></div>
     </div>
     <script src="popup.js"></script>    
   </body>
