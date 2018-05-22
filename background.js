@@ -425,10 +425,15 @@ function ajax(coupon,next_minute){
     try{
       result = eval(result);
     }catch(e){
-      result = result.match(/<h1 class="ctxt02"><s class="icon-redbag"><\/s>([^<]+)<\/h1>/m);
-      result = result && result[1];
+      if(coupon.is_jinrong){
+        result = result.match(/<p class="J_prizeIntro">([^<]+)<\/p>/m);
+        result = result && result[1];
+      }else{
+        result = result.match(/<h1 class="ctxt02"><s class="icon-redbag"><\/s>([^<]+)<\/h1>/m);
+        result = result && result[1];
+      }      
     }    
-    console.warn(now,coupon,result);
+    //console.warn(now,coupon,result);
     if( next_minute && (now - next_minute <= 1000) && (result.ret != 999) ){
       setTimeout(function(){ajax(coupon,next_minute)},Math.random() * 100 + 150);
     }else{

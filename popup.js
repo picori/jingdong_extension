@@ -30,7 +30,7 @@ $(function(){
 
   $("#download_sign_storage").click(function(){
     chrome.storage.local.get(null,function(results){
-      list = Object.keys(results).filter(function(key){return /sign\d+/.test(key)}).map(function(key){return {venderId:results[key]["venderId"],shopId:results[key]["shopId"],url:"https://mall.jd.com/shopSign-" + results[key]["shopId"] + ".html"}});//Object.values(results);
+      list = Object.keys(results).filter(function(key){return /sign\d+/.test(key)}).map(function(key){return {venderId:results[key]["venderId"],shopId:results[key]["shopId"],beans:results[key]["beans"],url:"https://mall.jd.com/shopSign-" + results[key]["shopId"] + ".html"}});//Object.values(results);
       var csv = CSV.encode(list, { header: true });
       var file = new File([csv], "sign_from_storage.csv", {type: "text/csv;charset=utf-8"});
       saveAs(file);
@@ -83,7 +83,7 @@ $(function(){
   $("#download_follow_storage").click(function(){
     chrome.storage.local.get(null,function(results){
       console.warn(results);
-      list = Object.keys(results).filter(function(key){return /follow\d+/.test(key)}).map(function(key){return {venderId:results[key]["venderId"],shopId:results[key]["shopId"],url:"https://mall.jd.com/index-" + results[key]["shopId"] + ".html"}});//Object.values(results);
+      list = Object.keys(results).filter(function(key){return /follow\d+/.test(key)}).map(function(key){return {venderId:results[key]["venderId"],shopId:results[key]["shopId"],beans:results[key]["beans"],url:"https://mall.jd.com/index-" + results[key]["shopId"] + ".html"}});//Object.values(results);
       var csv = CSV.encode(list, { header: true });
       var file = new File([csv], "follow_from_storage.csv", {type: "text/csv;charset=utf-8"});
       saveAs(file);
