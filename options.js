@@ -100,23 +100,13 @@ $(function(){
       name = $("#name").val().trim(),
       ajax = $("#ajax").val().trim() ? eval("("+$("#ajax").val().trim()+")") : {},
       //coupon_url = $("#coupon_url").val().trim(),
-      //click = $("#click").val(),
+      interval = $("#interval").val() || 150,
       start_date = $("#start_date").val().trim(),
       end_date = $("#end_date").val().trim(),
       is_jinrong = $("#jinrong:checked").length,
       memo = $("#memo").val().trim(),
-      coupon = {name,key,roleid,ajax,start_date,end_date,memo,is_jinrong};
+      coupon = {name,key,roleid,ajax,start_date,end_date,memo,is_jinrong,interval};
     if(is_jinrong){
-      // $.ajax({url:"https://payrisk.jd.com/m.html",dataType:"html"}).done(function(html){
-      //   let match,jd_risk_token_id,jd_jr_td_risk_pin;
-      //   if(match = html.match(/jd_risk_token_id\s*=\s*'([^']+)'/)){
-      //     jd_risk_token_id = match[1];
-      //   }
-      //   if(match = html.match(/jd_jr_td_risk_pin\s*=\s*'([^']+)'/)){
-      //     jd_jr_td_risk_pin = match[1];
-      //   }
-      //   console.warn(html);
-      // });
       coupon.ajax = {url:"https://m.jdpay.com/marketing/jdm/takeprize/direct",type:"POST",data:{
         "entranceId": key,
         "eid": "35CHJUTPIDBS5YY6RZI7M6IIR7J7VDS7SJJ4QYAERSFFTT6ZRZQHBV4AVM3CZCDGHICNPMRUINGGMF37PJ2FD2SYAY",

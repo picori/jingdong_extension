@@ -45,8 +45,6 @@ chrome.runtime.onInstalled.addListener(function() {
 });
 
 chrome.webNavigation.onBeforeNavigate.addListener(function (e){
-  // console.warn("onCreatedNavigationTarget");
-  // console.warn(e)
 })
 
 //fake to be from same origin
@@ -195,13 +193,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             }              
             return next();
           },next);
-        }else{          
+        }else{    
+          console.warn(data);      
           if(data.message.match(/获取店铺礼包信息失败/)){
             chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
           }else if(data.message.match(/店铺未开通礼包活动/)){
             chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
-          }
-          console.warn(data);
+          }else if(data.message.match(/获取礼包信息失败，传递参数有误！/){
+            return;
+          }          
           return next();
         }
       },next);
@@ -483,7 +483,7 @@ function ajax(coupon,next_minute){
     }    
     //console.warn(now,coupon,result);
     if( next_minute && (now - next_minute <= 1000) && (result.ret != 999) ){
-      setTimeout(function(){ajax(coupon,next_minute)},Math.random() * 100 + 150);
+      setTimeout(function(){ajax(coupon,next_minute)},coupon.interval || (Math.random() * 100 + 150) );
     }else{
       notify({title:"Coupon draw finished!",items:[{title:"msg",message:JSON.stringify(result)}]});
     }
