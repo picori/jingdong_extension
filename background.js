@@ -199,7 +199,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
           }else if(data.message.match(/店铺未开通礼包活动/)){
             chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
-          }else if(data.message.match(/获取礼包信息失败，传递参数有误！/){
+          }else if(data.message.match(/获取礼包信息失败，传递参数有误！/)){
             return;
           }          
           return next();
@@ -469,7 +469,7 @@ function ajax(coupon,next_minute){
   var now = new Date().getTime();
   coupon["ajax"]["cache"] = false;
   $.ajax(coupon["ajax"]).done(function(result){
-    console.warn(now,coupon,result);
+    //console.warn(now,coupon,result);
     try{
       result = eval(result);
     }catch(e){
