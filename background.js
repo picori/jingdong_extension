@@ -170,29 +170,34 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       //chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
       $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).then(function(data){
 
-        if(data.result && data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
-          chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
-          $.ajax({
-            url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
-            data: {
-                vId: vender_id,
-                jshop_token: data.jshop_token,
-                aId: data.giftList[0] ? data.giftList[0].activityId : 0
-            },
-            dataType: 'html'
-          }).then(function(response){
-            try{
-              response = JSON.parse(response);
-            }catch(e){
-              console.warn(e);
-            }
-            if(response.result){
-              let {discount=0} = data.giftList.find(function(item,index,list){return item.prizeType == 4});
-              beans += discount;
-              notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: discount},{title:"Current Total Beans",message:beans}]});
-            }              
+        if(data.result){
+          if(data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
+            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":2}},function(results){});
+            $.ajax({
+              url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
+              data: {
+                  vId: vender_id,
+                  jshop_token: data.jshop_token,
+                  aId: data.giftList[0] ? data.giftList[0].activityId : 0
+              },
+              dataType: 'html'
+            }).then(function(response){
+              try{
+                response = JSON.parse(response);
+              }catch(e){
+                console.warn(e);
+              }
+              if(response.result){
+                let {discount=0} = data.giftList.find(function(item,index,list){return item.prizeType == 4});
+                beans += discount;
+                notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: discount},{title:"Current Total Beans",message:beans}]});
+              }              
+              return next();
+            },next);
+          }else{
+            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
             return next();
-          },next);
+          }          
         }else{    
           console.warn(data);      
           if(data.message.match(/获取店铺礼包信息失败/)){
