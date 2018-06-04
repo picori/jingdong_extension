@@ -1212,6 +1212,7 @@ if (getPageType() === 1) {
                         window.location.reload();
                     }
                 });
+                setTimeout(function(){window.postMessage({"to":"background","work":"next","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');},5000);
             });
         };
         window.venderGift();

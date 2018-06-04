@@ -82,6 +82,7 @@ chrome.webRequest.onBeforeRequest.addListener(
     return {cancel: true};
   },
   {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207",
+  "https://static.360buyimg.com/static-shop-sale-p/js/common-business/??INTERFACE.js,login.js,follow.mall.js,getMallHeader.js,other.js?t=20161207",
   "*://payrisk.jd.com/js/m.js"]},
   ["blocking"]
 );
