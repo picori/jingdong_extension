@@ -20,11 +20,10 @@ function injectCustomJs(jsPath)
   document.head.appendChild(temp);
 }
 
-injectCustomJs('js/inject.js');
-injectCustomJs('js/follow.js');
-// if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)/)){
-//   injectCustomJs('js/follow.js');
-// }
+if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)/)){
+  injectCustomJs('js/inject.js');
+  injectCustomJs('js/follow.js');
+}
 
 if(window.location.href.match(/https?:\/\/m\.jdpay\.(com|hk)/)){
   console.warn(window.location.href);
@@ -32,6 +31,11 @@ if(window.location.href.match(/https?:\/\/m\.jdpay\.(com|hk)/)){
 }else{
   console.warn(window.location.href);
 }
+
+if(window.location.href.match(/https?:\/\/sale\.jd\.(com|hk)\/act/)){
+  injectCustomJs('js/lottery.js');
+}
+
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {

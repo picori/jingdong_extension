@@ -243,15 +243,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   } 
   function draw(callback){
     var match,
-    current_code = (list||[]).shift();
-    console.warn(current_code);
-    if(!current_code){
-      notify({title:"All shops are drawed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+    current_url = (list||[]).shift();
+    console.warn(current_url);
+    if(!current_url){
+      notify({title:"All shops are drawed!",items:[{title:"last_operaton",message:last_operaton}]});
       reset_summary();      
       return callback && callback();
     }
+    chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    return;
     function drawLottery(lottery_code,cb){
-      return $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?callback=jQuery4904083&lotteryCode=${lottery_code}`,cache:false,dataType:"html"}).then(function(result){
+      return $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?&lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
         console.warn(result);
         try{
           result = eval(result.replace(/^jQuery4904083/,""));
@@ -361,6 +363,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           });
         });
       });
+    }else if(request["work"] == "draw"){
+      fetchTab(function(){
+        draw(function(result){
+          //console.warn(result);
+        });
+      });
     }else if(request["work"] == "collect_coupon"){
       if(request["coupon"]){
         let {ajax,info} = request["coupon"];
@@ -394,6 +402,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       }else{
 
       }
+    }else if(request["work"] == "notify"){
+      notify({title:"Lottery draw result!",items:[{title:"msg",message:JSON.stringify(request["info"])}]});
     }
   }
 });  

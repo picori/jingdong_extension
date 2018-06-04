@@ -91,7 +91,7 @@ $(function(){
   })
 
   $("#process_follow").click(function(){
-    var list = ($("#url_list").val().match(/(https?:\/\/mall\.jd\.(com|hk)\/index-\d+\.html)|(https?:\/\/([^\.])+\.jd.(com|hk))/g)||[])
+    var list = ($("#url_list").val().match(/(https?:\/\/mall\.jd\.(com|hk)\/index-\d+\.html)/g)||[])
     .filter(function(url){return !url.match(/^https?:\/\/mall\.jd\.(com|hk)\/?$/)});
     $("#url_list").val(list.join("\n"));
     //$(this).attr("disabled","disabled");
@@ -179,28 +179,9 @@ $(function(){
     });    
   });
   $("#draw_lottery").click(async function(){
-    var list = ($("#lottery_list").val().match(/(https?:\/\/\S+\.html)/g)||[]),
-    url,lottery_code_list = [];
-    $("#lottery_list").val(list.join("\n"));
-    //$(this).attr("disabled","disabled");
-    async function get_lottery(url){
-      console.warn(url);
-      if(url){
-        return $.ajax({url,dataType:"html"}).then(function(html){
-          var lottery_code;
-          if(lottery_code = html.match(/\{lotterycode:'([^']+)'\}/m)){
-            lottery_code = lottery_code[1];
-          }
-          return Promise.resolve(lottery_code);
-        });
-      }      
-    }
-    while(url = list.shift()){
-      let lottery_code = await get_lottery(url);
-      console.warn(lottery_code);
-      lottery_code && lottery_code_list.push(lottery_code);
-    }    
-    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_draw","list":lottery_code_list}, function(response) {
+    var list = ($("#lottery_list").val().match(/(https?:\/\/sale\.jd\.com\/act\/\w+\.html)/g)||[]);
+    $("#lottery_list").val(list.join("\n"));   
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_draw","list":list}, function(response) {
       console.log('收到来自后台的回复：' + response);
     });    
   });

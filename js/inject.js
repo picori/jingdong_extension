@@ -146,13 +146,6 @@ function clear_useless_coupon(){
         i--;
       } 
     }
-    $(function(){
-      window.setTimeout(function(){
-        console.warn("Time out next!");
-        window.location.reload();return;
-        window.postMessage({"to":"background","work":"error"}, '*');
-      },5000)
-    });
   }
 })();
 
