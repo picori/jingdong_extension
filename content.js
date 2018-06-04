@@ -20,10 +20,11 @@ function injectCustomJs(jsPath)
   document.head.appendChild(temp);
 }
 
-if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)/)){
-  injectCustomJs('js/inject.js');
-  injectCustomJs('js/follow.js');
-}
+injectCustomJs('js/inject.js');
+injectCustomJs('js/follow.js');
+// if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)/)){
+//   injectCustomJs('js/follow.js');
+// }
 
 if(window.location.href.match(/https?:\/\/m\.jdpay\.(com|hk)/)){
   console.warn(window.location.href);
@@ -47,6 +48,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         console.warn(key);
         key.match("/^giftpicori(\d+)/") && window.localStorage.removeItem(key);
       }
+    }
+  }
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
+{
+  if(request.to == "content"){
+    if(request.work == "clear_localstorage"){
+      let i = 0,key;
+      while(key = window.localStorage.key(i++)){
+        console.warn(key);
+        key.match("/^giftpicori(\d+)/") && window.localStorage.removeItem(key);
+      }
+    }else if(request.work == "inject_draw"){
+      injectCustomJs('js/draw.js');
     }
   }
 });

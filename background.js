@@ -60,11 +60,11 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   }, {urls:["*://a.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
-chrome.webRequest.onBeforeSendHeaders.addListener(
-  function (details){
-    return {cancel:true};
-  }, {urls:["*://uranus.jd.com/*"]},
-  ["blocking","requestHeaders"]);
+// chrome.webRequest.onBeforeSendHeaders.addListener(
+//   function (details){
+//     return {cancel:true};
+//   }, {urls:["*://uranus.jd.com/*"]},
+//   ["blocking","requestHeaders"]);
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
   function (details){
@@ -77,14 +77,14 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   }, {urls:["*://m.jr.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
-// chrome.webRequest.onBeforeRequest.addListener(
-//   function(details) {
-//     return {cancel: true};
-//   },
-//   {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207",
-//   "*://payrisk.jd.com/js/m.js"]},
-//   ["blocking"]
-// );
+chrome.webRequest.onBeforeRequest.addListener(
+  function(details) {
+    return {cancel: true};
+  },
+  {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207",
+  "*://payrisk.jd.com/js/m.js"]},
+  ["blocking"]
+);
 
   // chrome.webRequest.onBeforeRequest.addListener(
   //   function (e){
@@ -147,7 +147,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       reset_summary();      
       return callback && callback();
     }
-    //chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    return;
     function getIndexPage(url,cb){
       return $.ajax({url,dataType:"html"}).then(function(page){
         cb(page);
@@ -302,6 +303,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: result["beans"]},{title:"Current Total Beans",message:beans}]});
           //console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
         }
+        result["beans"] = 1;
         chrome.storage.local.set({[last_operaton + result.shopId]:result},function(results){
           
         });

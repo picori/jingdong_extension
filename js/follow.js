@@ -1206,6 +1206,10 @@ if (getPageType() === 1) {
                         }else{
                             window.postMessage({"to":"background","work":"next","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');
                         }
+                    },
+                    error:function(e){
+                        console.warn(e);
+                        window.location.reload();
                     }
                 });
             });

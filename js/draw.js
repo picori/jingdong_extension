@@ -102,8 +102,7 @@ function clear_useless_coupon(){
       }
       if(coupon = useable.shift()){
         var filters = [/全品类\(特例商品除外\)/,/话费充值/,/运费/,/支付/,/小金库/,/闪付/,/还款/];
-        if(coupon.shopName && ( coupon.discount / coupon.quota ) <= 0.8){
-        //if( (coupon.shopName /*&& coupon.coupontype == 1*/) || (!filters.find(function(filter){return filter.test(coupon.limitStr)}) && ( coupon.discount / coupon.quota ) <= 0.2)  ) {
+        if( (coupon.shopName /*&& coupon.coupontype == 1*/) || (!filters.find(function(filter){return filter.test(coupon.limitStr)}) && ( coupon.discount / coupon.quota ) <= 0.2)  ) {
           $.ajax({url:"https:////wq.jd.com/activeapi/deletejdcoupon?",dataType: 'jsonp',data:{
             couponid: coupon.couponid || "",
             batchid: coupon.batchid || "",
@@ -146,13 +145,6 @@ function clear_useless_coupon(){
         i--;
       } 
     }
-    $(function(){
-      window.setTimeout(function(){
-        console.warn("Time out next!");
-        window.location.reload();return;
-        window.postMessage({"to":"background","work":"error"}, '*');
-      },5000)
-    });
   }
 })();
 
