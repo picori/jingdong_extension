@@ -32,6 +32,11 @@ if(window.location.href.match(/https?:\/\/m\.jdpay\.(com|hk)/)){
   console.warn(window.location.href);
 }
 
+if(window.location.href.match(/https?:\/\/sale\.jd\.(com|hk)\/act/)){
+  injectCustomJs('js/lottery.js');
+}
+
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {
   //console.log('收到来自content-script的消息：');
@@ -47,6 +52,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         console.warn(key);
         key.match("/^giftpicori(\d+)/") && window.localStorage.removeItem(key);
       }
+    }
+  }
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
+{
+  if(request.to == "content"){
+    if(request.work == "clear_localstorage"){
+      let i = 0,key;
+      while(key = window.localStorage.key(i++)){
+        console.warn(key);
+        key.match("/^giftpicori(\d+)/") && window.localStorage.removeItem(key);
+      }
+    }else if(request.work == "inject_draw"){
+      injectCustomJs('js/draw.js');
     }
   }
 });

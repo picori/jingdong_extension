@@ -60,11 +60,11 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   }, {urls:["*://a.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
-chrome.webRequest.onBeforeSendHeaders.addListener(
-  function (details){
-    return {cancel:true};
-  }, {urls:["*://uranus.jd.com/*"]},
-  ["blocking","requestHeaders"]);
+// chrome.webRequest.onBeforeSendHeaders.addListener(
+//   function (details){
+//     return {cancel:true};
+//   }, {urls:["*://uranus.jd.com/*"]},
+//   ["blocking","requestHeaders"]);
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
   function (details){
@@ -77,14 +77,15 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   }, {urls:["*://m.jr.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
-// chrome.webRequest.onBeforeRequest.addListener(
-//   function(details) {
-//     return {cancel: true};
-//   },
-//   {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207",
-//   "*://payrisk.jd.com/js/m.js"]},
-//   ["blocking"]
-// );
+chrome.webRequest.onBeforeRequest.addListener(
+  function(details) {
+    return {cancel: true};
+  },
+  {urls: ["https://static.360buyimg.com/static-mall/shop/dest/js/common-business/??INTERFACE.min.js,login.min.js,follow.mall.min.js,getMallHeader.min.js,other.min.js?t=20161207",
+  "https://static.360buyimg.com/static-shop-sale-p/js/common-business/??INTERFACE.js,login.js,follow.mall.js,getMallHeader.js,other.js?t=20161207",
+  "*://payrisk.jd.com/js/m.js"]},
+  ["blocking"]
+);
 
   // chrome.webRequest.onBeforeRequest.addListener(
   //   function (e){
@@ -147,7 +148,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       reset_summary();      
       return callback && callback();
     }
-    //chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    return;
     function getIndexPage(url,cb){
       return $.ajax({url,dataType:"html"}).then(function(page){
         cb(page);
@@ -170,29 +172,34 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       //chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
       $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).then(function(data){
 
-        if(data.result && data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
-          chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
-          $.ajax({
-            url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
-            data: {
-                vId: vender_id,
-                jshop_token: data.jshop_token,
-                aId: data.giftList[0] ? data.giftList[0].activityId : 0
-            },
-            dataType: 'html'
-          }).then(function(response){
-            try{
-              response = JSON.parse(response);
-            }catch(e){
-              console.warn(e);
-            }
-            if(response.result){
-              let {discount=0} = data.giftList.find(function(item,index,list){return item.prizeType == 4});
-              beans += discount;
-              notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: discount},{title:"Current Total Beans",message:beans}]});
-            }              
+        if(data.result){
+          if(data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
+            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":2}},function(results){});
+            $.ajax({
+              url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
+              data: {
+                  vId: vender_id,
+                  jshop_token: data.jshop_token,
+                  aId: data.giftList[0] ? data.giftList[0].activityId : 0
+              },
+              dataType: 'html'
+            }).then(function(response){
+              try{
+                response = JSON.parse(response);
+              }catch(e){
+                console.warn(e);
+              }
+              if(response.result){
+                let {discount=0} = data.giftList.find(function(item,index,list){return item.prizeType == 4});
+                beans += discount;
+                notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: discount},{title:"Current Total Beans",message:beans}]});
+              }              
+              return next();
+            },next);
+          }else{
+            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
             return next();
-          },next);
+          }          
         }else{    
           console.warn(data);      
           if(data.message.match(/获取店铺礼包信息失败/)){
@@ -237,15 +244,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   } 
   function draw(callback){
     var match,
-    current_code = (list||[]).shift();
-    console.warn(current_code);
-    if(!current_code){
-      notify({title:"All shops are drawed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+    current_url = (list||[]).shift();
+    console.warn(current_url);
+    if(!current_url){
+      notify({title:"All shops are drawed!",items:[{title:"last_operaton",message:last_operaton}]});
       reset_summary();      
       return callback && callback();
     }
+    chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    return;
     function drawLottery(lottery_code,cb){
-      return $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?callback=jQuery4904083&lotteryCode=${lottery_code}`,cache:false,dataType:"html"}).then(function(result){
+      return $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?&lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
         console.warn(result);
         try{
           result = eval(result.replace(/^jQuery4904083/,""));
@@ -297,6 +306,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: result["beans"]},{title:"Current Total Beans",message:beans}]});
           //console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
         }
+        result["beans"] = 1;
         chrome.storage.local.set({[last_operaton + result.shopId]:result},function(results){
           
         });
@@ -354,6 +364,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           });
         });
       });
+    }else if(request["work"] == "draw"){
+      fetchTab(function(){
+        draw(function(result){
+          //console.warn(result);
+        });
+      });
     }else if(request["work"] == "collect_coupon"){
       if(request["coupon"]){
         let {ajax,info} = request["coupon"];
@@ -387,6 +403,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       }else{
 
       }
+    }else if(request["work"] == "notify"){
+      notify({title:"Lottery draw result!",items:[{title:"msg",message:JSON.stringify(request["info"])}]});
     }
   }
 });  
