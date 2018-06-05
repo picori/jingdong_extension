@@ -20,7 +20,7 @@ function injectCustomJs(jsPath)
   document.head.appendChild(temp);
 }
 
-if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)/)){
+if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)/) || window.location.href.match(/https?:\/\/www\.jd\.(com|hk)/)) {
   injectCustomJs('js/inject.js');
   injectCustomJs('js/follow.js');
 }
