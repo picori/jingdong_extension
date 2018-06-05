@@ -180,6 +180,7 @@ $(function(){
   });
   $("#draw_lottery").click(async function(){
     var list = ($("#lottery_list").val().match(/(https?:\/\/sale\.jd\.com\/act\/\w+\.html)/g)||[]);
+    list.sort(function(a,b){return 0.5 - Math.random()});
     $("#lottery_list").val(list.join("\n"));   
     chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_draw","list":list}, function(response) {
       console.log('收到来自后台的回复：' + response);

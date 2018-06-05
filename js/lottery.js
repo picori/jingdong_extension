@@ -32,22 +32,24 @@ function draw_lottery(){
 }
 
 function draw(lottery_code){
-  $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
-    console.warn(result);
-    if(result){
-      if(result["data"]["winner"]){
-        window.postMessage({"to":"background","work":"notify","info":result}, '*');
-      }
-      if(result["data"]["chances"]>0){
-        draw(lottery_code);
+  setTimeout(function(){
+    $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
+      console.warn(result);
+      if(result){
+        if(result["data"]["winner"]){
+          window.postMessage({"to":"background","work":"notify","info":result}, '*');
+        }
+        if(result["data"]["chances"]>0){
+          draw(lottery_code);
+        }else{
+          window.postMessage({"to":"background","work":"draw",result}, '*');
+        }
       }else{
         window.postMessage({"to":"background","work":"draw",result}, '*');
       }
-    }else{
-      window.postMessage({"to":"background","work":"draw",result}, '*');
-    }
-    //result = {"data":{"chances":0,"downgradeCanNotWin":false,"pass":true,"promptMsg":"错误！","userPin":"picori","winner":false}};
-  })
+      //result = {"data":{"chances":0,"downgradeCanNotWin":false,"pass":true,"promptMsg":"错误！","userPin":"picori","winner":false}};
+    })
+  },2 * 60 * 1000 * Math.random());  
 }
 
 draw_lottery();

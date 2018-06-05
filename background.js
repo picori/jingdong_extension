@@ -465,7 +465,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             }else if(coupon["ajax"]){
               ajax(coupon,next_minute);
             } 
-          },60 * 1000 - 1000);
+          },60 * 1000 - 2000);
         });
       });
     });
@@ -526,6 +526,7 @@ function notify(option,callback = function(){}){
   option["items"].forEach(function(item){
     item.message += "";
   });
+  console.warn(option);
   chrome.notifications.create(null,option,callback);
 }
 

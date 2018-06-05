@@ -15,7 +15,7 @@ function injectCustomJs(jsPath)
   {
     // 放在页面不好看，执行完后移除掉
     this.parentNode.removeChild(this);
-    console.warn("inject complete");
+    console.warn(["inject",jsPath,"complete"].join(" "));
   };
   document.head.appendChild(temp);
 }
