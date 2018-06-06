@@ -1117,9 +1117,9 @@ if (getPageType() === 1) {
                 success: function(data) {
                     if (data.result) {
                         let beanPrize = giftList.find(function(item,index,list){return item.prizeType == 4})||{};
-                        window.postMessage({"to":"background","work":"next","result":{"venderId": venderId,"beans":beanPrize.discount||0,"shopId":$("#shop_id").val()}}, '*');
+                        window.postMessage({"to":"background","work":"follow","result":{"venderId": venderId,"beans":beanPrize.discount||0,"shopId":$("#shop_id").val()}}, '*');
                     } else {
-                        window.postMessage({"to":"background","work":"next","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');
+                        window.postMessage({"to":"background","work":"follow","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');
                     }
                 }
             })
@@ -1181,7 +1181,7 @@ if (getPageType() === 1) {
                 if(giftList.find(function(item,index,list){return item.prizeType == 4})){
                     drawGift(giftList[0] ? giftList[0].activityId : '');
                 }else{
-                    window.postMessage({"to":"background","work":"next","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');
+                    window.postMessage({"to":"background","work":"follow","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');
                 }                
                 //modalWrap.remove();
                 //modalMask.remove();
@@ -1204,7 +1204,7 @@ if (getPageType() === 1) {
                             token = data.jshop_token;
                             drawGift(data.giftList);
                         }else{
-                            window.postMessage({"to":"background","work":"next","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');
+                            window.postMessage({"to":"background","work":"follow","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');
                         }
                     },
                     error:function(e){
@@ -1212,7 +1212,7 @@ if (getPageType() === 1) {
                         window.location.reload();
                     }
                 });
-                setTimeout(function(){window.postMessage({"to":"background","work":"next","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');},5000);
+                setTimeout(function(){window.postMessage({"to":"background","work":"follow","result":{"venderId": venderId,"beans":0,"shopId":$("#shop_id").val()}}, '*');},5000);
             });
         };
         window.venderGift();

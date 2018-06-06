@@ -5,13 +5,6 @@
 'use strict';
 
 // 
-var list;
-var current_tab;
-var current_url;
-var sign_list;
-var last_operaton = "";
-var counter = 0;
-var beans = 0;
 var db = new Dexie("MyDatabase");
 db.version(1).stores({
     coupon: "&key,startTime,endTime,&id,priority",
@@ -96,13 +89,25 @@ chrome.webRequest.onBeforeRequest.addListener(
   //     });
   //   }, {urls:["*://f-mall.jd.com/shopGift/drawShopGiftInfo*"]});
 
-function fetchTab(callback){
+function fetchTab(type,callback,index=0){
+  // if(fetchTab[type]){
+  //   chrome.tabs.query({id:fetchTab[type]}, function (tabs){
+  //     if(tabs[0].active){
+  //       callback(current_tab[type]=tabs[0]);
+  //     }else{
+  //       chrome.tabs.create({index:index},function(tab){
+  //         console.warn("New tab is created");
+  //         callback(tab);
+  //       });
+  //     }
+  //   })
+  // }
   chrome.tabs.query({index:0}, function (tabs){
-    if(!current_tab || (current_tab.id != tabs[0].id)){
-      current_tab=tabs[0];     
-      addBlocker(current_tab);
+    if(!current_tab[type] || (current_tab[type].id != tabs[0].id)){
+      current_tab[type] = tabs[0];     
+      addBlocker(current_tab[type]);
     }
-    callback(current_tab);    
+    callback(current_tab[type]);    
   });
 }
 
@@ -129,26 +134,36 @@ function addBlocker(tab){
   // );
 }
 
+var list = {follow:[],sign:[],draw:[]};
+var current_tab = {follow:undefined,sign:undefined,draw:undefined};
+var current_url = {follow:undefined,sign:undefined,draw:undefined};
+var running = {follow:false,sign:false,draw:false};
+var counter = {follow:0,sign:0,draw:0};
+var beans = {follow:0,sign:0,draw:0};
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {
-  function reset_summary(){
-    beans = 0;
-    counter = 0;
-    last_operaton = "";
-    sign_list = undefined;
-    list = undefined;
+  function reset_summary(type){
+    var types = type ? [type] : ["follow","sign","draw"];
+    types.forEach(function(type){
+      list[type] = [];
+      current_url[type] = undefined;
+      beans[type] = 0;
+      counter[type] = 0;
+      running[type] = false;
+      current_tab[type] = undefined;
+    });
   }
   function follow(callback){
     var match;
-    current_url = (list||[]).shift();
-    console.warn(current_url);
-    if(!current_url){
-      notify({title:"All shops are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+    current_url["follow"] = (list["follow"]||[]).shift();
+    console.warn(current_url["follow"]);
+    if(!current_url["follow"]){
+      notify({title:"All shops are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter["follow"]},{title:"beans",message: beans["follow"]}]});
       reset_summary();      
       return callback && callback();
     }
-    chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    chrome.tabs.update(current_tab["follow"].id, {url:current_url["follow"]},callback);
     return;
     function getIndexPage(url,cb){
       return $.ajax({url,dataType:"html"}).then(function(page){
@@ -220,38 +235,28 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 
     // }
   }
-  function fetchDatas(url_list,callback){
-    if(url_list.length){
-      list = url_list;
-      callback();
-    }else{
-      chrome.storage.local.get(null,function(results){
-        list = Object.keys(results);//Object.values(results);
-        callback();
-      });
-    }
-  }
+  
   function sign(callback){
-    let current = (list||[]).shift();
+    let current = (list["sign"]||[]).shift();
     if(!current){
-      notify({title:"All shops are signed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"beans",message: beans}]});
+      notify({title:"All shops are signed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter["sign"]},{title:"beans",message: beans["sign"]}]});
       reset_summary();     
       return callback && callback();
     }
     let {url} = current;
-    current_url = url;
-    chrome.tabs.update(current_tab.id, {url},callback);
+    current_url["sign"] = url;
+    chrome.tabs.update(current_tab["sign"].id, {url},callback);
   } 
   function draw(callback){
     var match,
-    current_url = (list||[]).shift();
+    current_url = (list["draw"]||[]).shift();
     console.warn(current_url);
     if(!current_url){
-      notify({title:"All shops are drawed!",items:[{title:"last_operaton",message:last_operaton}]});
+      notify({title:"All shops are drawed!",items:[{title:"Operaton",message:"Draw"}]});
       reset_summary();      
       return callback && callback();
     }
-    chrome.tabs.update(current_tab.id, {url:current_url},callback);
+    chrome.tabs.update(current_tab["draw"].id, {url:current_url},callback);
     return;
     function drawLottery(lottery_code,cb){
       return $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?&lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
@@ -276,96 +281,98 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     }
     drawLottery(current_code,draw);
   }
+  function fetchFollowList(url_list,callback){
+    if(url_list.length){
+      list["follow"] = url_list;
+      callback();
+    }else{
+      chrome.storage.local.get(null,function(results){
+        list["follow"] = Object.keys(results);//Object.values(results);
+        callback();
+      });
+    }
+  }
   function fetchSignList(sign_list,callback){
-    list = sign_list;
+    list["sign"] = sign_list;
     callback && callback();
   }
   function fetchDrawList(draw_list,callback){
-    list = draw_list;
+    list["draw"] = draw_list;
     callback && callback();
   }
-  function next(reject){
-    reject && console.warn(reject);
+  function next(type){
+    //reject && console.warn(reject);
     counter++;
-    if(last_operaton == "follow"){
+    if(type == "follow"){
       follow();
-    }else if(last_operaton == "sign"){
+    }else if(type == "sign"){
       sign();
-    }else if(last_operaton == "draw"){
+    }else if(type == "draw"){
       draw();
     }
   }
   if(request["to"] == "background"){
-    if(request["work"] == "next"){
-      let result = request["result"]||{"venderId":0,"shopId":0,"beans":0};
-      counter++;
-      request["work"] = last_operaton;
-      beans += result["beans"];
-      if(result.shopId){
-        if(result["beans"]){
-          notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: result["beans"]},{title:"Current Total Beans",message:beans}]});
-          //console.warn(`last_operaton: ${last_operaton}\tcounter: ${counter}\tbeans: ${beans}\t`);
-        }
-        result["beans"] = 1;
-        chrome.storage.local.set({[last_operaton + result.shopId]:result},function(results){
-          
-        });
-      }      
-    }else if(request["work"] == "error"){
-      if(!current_url){
+    if(request["work"] == "follow_error"){
+      if(!current_url["follow"]){
         return;
       }
       var match = current_url.match(/\-(\d+).html/);
-      counter++;
+      counter["follow"]++;
       if(match){
-        chrome.storage.local.remove(last_operaton + match[1],function(results){
-          console.warn(last_operaton + match[1]);
+        chrome.storage.local.remove("follow" + match[1],function(results){
+          console.warn("follow" + match[1]);
         });
       }      
-      request["work"] = last_operaton;
+      request["work"] = "follow";
     }
     if(request["work"] == "start_follow"){
-      last_operaton = "follow";      
-      fetchDatas(request["list"],function(){
-        fetchTab(function(){
+      fetchFollowList(request["list"],function(){
+        fetchTab("follow",function(){
           follow(function(result){            
             //console.warn(result);
           });
         })
       });
     }else if(request["work"] == "follow"){
-      fetchTab(function(tab){
+      let result = request["result"]||{"venderId":0,"shopId":0,"beans":0};
+      counter["follow"]++;
+      beans["follow"] += result["beans"];
+      if(result.shopId){
+        if(result["beans"]){
+          notify({title:`Followed a shop with beans!`,items:[{title:"Order",message:counter["follow"]},{title:"Beans",message: result["beans"]},{title:"Current Total Beans",message:beans["follow"]}]});
+        }
+        result["beans"] = 1;
+        chrome.storage.local.set({["follow" + result.shopId]:result},function(results){});
+      }
+      fetchTab("follow",function(tab){
         follow(function(result){            
           //console.warn(result);
         });
       });
     }else if(request["work"] == "start_sign"){
-      last_operaton = "sign";
       fetchSignList(request["list"],function(){
-        fetchTab(function(){
+        fetchTab("sign",function(){
           sign(function(result){            
             //console.warn(result);
           });
         });
       });
     }else if(request["work"] == "sign"){
-      fetchTab(function(){
+      fetchTab("sign",function(){
         sign(function(result){
           //console.warn(result);
         });
       });
     }else if(request["work"] == "start_draw"){
-      //return console.warn(request["list"]);
-      last_operaton = "draw";
       fetchDrawList(request["list"],function(){
-        fetchTab(function(){
+        fetchTab("draw",function(){
           draw(function(result){            
             //console.warn(result);
           });
         });
       });
     }else if(request["work"] == "draw"){
-      fetchTab(function(){
+      fetchTab("draw",function(){
         draw(function(result){
           //console.warn(result);
         });
@@ -465,7 +472,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             }else if(coupon["ajax"]){
               ajax(coupon,next_minute);
             } 
-          },60 * 1000 - 2000);
+          },60 * 1000 - 1000);
         });
       });
     });

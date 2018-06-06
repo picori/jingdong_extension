@@ -125,19 +125,19 @@ function clear_useless_coupon(){
 (function (){
   if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)\/shopSign-\d+\.html/)){
     console.warn("ShopSigned!");
-    window.postMessage({"to":"background","work":"next","result":{"venderId": document.getElementById("vender_id").value,"beans":((document.querySelector(".jingdou .c-yellow")||{}).innerHTML * 1) || 0,"shopId":document.getElementById("shop_id").value}}, '*');
+    window.postMessage({"to":"background","work":"sign","result":{"venderId": document.getElementById("vender_id").value,"beans":((document.querySelector(".jingdou .c-yellow")||{}).innerHTML * 1) || 0,"shopId":document.getElementById("shop_id").value}}, '*');
   }else if(window.location.href.match(/https?:\/\/www\.jd\.com\/error\.aspx/)){
     window.postMessage({"to":"background","work":"error"}, '*');
   }else if(!window.location.href.match(/https?:\/\/mall\.jd\.com/)){
     $(function(){
       window.setTimeout(function(){
         console.warn("Time out next!");
-        window.postMessage({"to":"background","work":"error"}, '*');
+        window.postMessage({"to":"background","work":"follow_error"}, '*');
       },5000)
     });
   }else{
     if($("div.error h2:contains('抱歉，您请求的地址已下线或者过期')").is(":visible")){
-      return window.postMessage({"to":"background","work":"error"}, '*');
+      return window.postMessage({"to":"background","work":"follow_error"}, '*');
     }
     let i = 0,key;
     while(key = window.localStorage.key(i++)){
