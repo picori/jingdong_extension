@@ -159,7 +159,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     current_url["follow"] = (list["follow"]||[]).shift();
     console.warn(current_url["follow"]);
     if(!current_url["follow"]){
-      notify({title:"All shops are followed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter["follow"]},{title:"beans",message: beans["follow"]}]});
+      notify({title:"All shops are followed!",items:[{title:"Operaton",message:"Follow"},{title:"counter",message:counter["follow"]},{title:"beans",message: beans["follow"]}]});
       reset_summary();      
       return callback && callback();
     }
@@ -239,7 +239,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   function sign(callback){
     let current = (list["sign"]||[]).shift();
     if(!current){
-      notify({title:"All shops are signed!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter["sign"]},{title:"beans",message: beans["sign"]}]});
+      notify({title:"All shops are signed!",items:[{title:"Operation",message:"Sign"},{title:"counter",message:counter["sign"]},{title:"beans",message: beans["sign"]}]});
       reset_summary();     
       return callback && callback();
     }
@@ -358,6 +358,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         });
       });
     }else if(request["work"] == "sign"){
+      let result = request["result"]||{"venderId":0,"shopId":0,"beans":0};
+      counter["sign"]++;
+      beans["sign"] += result["beans"];
+      if(result.shopId){
+        if(result["beans"]){
+          notify({title:`Followed a shop with beans!`,items:[{title:"Order",message:counter["sign"]},{title:"Beans",message: result["beans"]},{title:"Current Total Beans",message:beans["sign"]}]});
+        }
+        result["beans"] = 1;
+        chrome.storage.local.set({["sign" + result.shopId]:result},function(results){});
+      }
       fetchTab("sign",function(){
         sign(function(result){
           //console.warn(result);
