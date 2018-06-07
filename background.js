@@ -156,11 +156,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
   function follow(callback){
     var match;
+    if( current_url["follow"] === undefined ){
+      return;
+    }
     current_url["follow"] = (list["follow"]||[]).shift();
     console.warn(current_url["follow"]);
     if(!current_url["follow"]){
       notify({title:"All shops are followed!",items:[{title:"Operaton",message:"Follow"},{title:"counter",message:counter["follow"]},{title:"beans",message: beans["follow"]}]});
-      reset_summary();      
+      reset_summary("follow");      
       return callback && callback();
     }
     chrome.tabs.update(current_tab["follow"].id, {url:current_url["follow"]},callback);
@@ -237,15 +240,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
   
   function sign(callback){
-    let current = (list["sign"]||[]).shift();
-    if(!current){
+    current_url["sign"] = (list["sign"]||[]).shift();
+    if(!current_url["sign"]){
+      console.warn(current_url["sign"]);
       notify({title:"All shops are signed!",items:[{title:"Operation",message:"Sign"},{title:"counter",message:counter["sign"]},{title:"beans",message: beans["sign"]}]});
-      reset_summary();     
+      reset_summary("sign");     
       return callback && callback();
     }
-    let {url} = current;
-    current_url["sign"] = url;
-    chrome.tabs.update(current_tab["sign"].id, {url},callback);
+    chrome.tabs.update(current_tab["sign"].id, {url:current_url["sign"]},callback);
   } 
   function draw(callback){
     var match,
@@ -504,7 +506,7 @@ function ajax(coupon,next_minute){
   var now = new Date().getTime();
   coupon["ajax"]["cache"] = false;
   $.ajax(coupon["ajax"]).done(function(result){
-    //console.warn(now,coupon,result);
+    console.warn(now,coupon,result);
     try{
       result = eval(result);
     }catch(e){
