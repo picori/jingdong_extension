@@ -14,7 +14,7 @@ $(function(){
   $("#process_sign").click(function(){
     var list = $("#sign_list").val().match(/https?:\/\/mall\.jd\.com\/shopSign-\d+\.html/g)||[];
     $("#sign_list").val(list.join("\n"));        
-    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_sign","list":list.map(function(url){return {url};})}, function(response) {
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_sign","list":list}, function(response) {
       //console.log('收到来自后台的回复：' + response);
     });
   });
@@ -94,6 +94,7 @@ $(function(){
     var list = ($("#url_list").val().match(/(https?:\/\/mall\.jd\.(com|hk)\/index-\d+\.html)/g)||[])
     .filter(function(url){return !url.match(/^https?:\/\/mall\.jd\.(com|hk)\/?$/)});
     $("#url_list").val(list.join("\n"));
+    list.sort(function(a,b){return 0.5 - Math.random()});
     //$(this).attr("disabled","disabled");
     chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow","list":list}, function(response) {
       console.log('收到来自后台的回复：' + response);
