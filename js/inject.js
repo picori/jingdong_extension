@@ -102,8 +102,8 @@ function clear_useless_coupon(){
       }
       if(coupon = useable.shift()){
         var filters = [/全品类/,/类/,/话费充值/,/运费/,/支付/,/小金库/,/闪付/,/还款/];
-        //if(coupon.shopName && coupon.coupontype == 1 && ( coupon.discount / coupon.quota ) <= 0.8){
-        if( coupon.shopName || !filters.find(function(filter){return filter.test(coupon.limitStr)})  ) {
+        if(coupon.shopName && coupon.coupontype == 1 && ( coupon.discount / coupon.quota ) <= 0.8){
+        //if( coupon.shopName || !filters.find(function(filter){return filter.test(coupon.limitStr)})  ) {
           $.ajax({url:"https:////wq.jd.com/activeapi/deletejdcoupon?",dataType: 'jsonp',data:{
             couponid: coupon.couponid || "",
             batchid: coupon.batchid || "",

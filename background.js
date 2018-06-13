@@ -4,6 +4,9 @@
 
 'use strict';
 
+// http://coupon.m.jd.com/coupons/show.action?key=1007aa0ba6f54a0da06d58dd94fb743d&roleId=12358353
+// http://coupon.jd.com/ilink/couponSendFront/send_index.action?key=e2c098dc77d94f8d97a9568aba5f2087&roleId=12336645&to=jd.com&cu=true
+
 // 
 var db = new Dexie("MyDatabase");
 db.version(1).stores({
@@ -137,7 +140,7 @@ function addBlocker(tab){
 var list = {follow:[],sign:[],draw:[]};
 var current_tab = {follow:undefined,sign:undefined,draw:undefined};
 var current_url = {follow:undefined,sign:undefined,draw:undefined};
-var running = {follow:false,sign:false,draw:false};
+var running = false;
 var counter = {follow:0,sign:0,draw:0};
 var beans = {follow:0,sign:0,draw:0};
 
@@ -150,15 +153,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       current_url[type] = undefined;
       beans[type] = 0;
       counter[type] = 0;
-      running[type] = false;
-      current_tab[type] = undefined;
+      running = false;
+      current_tab[type] = false;
     });
   }
   function follow(callback){
     var match;
-    if( current_url["follow"] === undefined ){
+    if( running && !current_url["follow"] ){
       return;
     }
+    running = "follow";
     current_url["follow"] = (list["follow"]||[]).shift();
     console.warn(current_url["follow"]);
     if(!current_url["follow"]){
@@ -241,6 +245,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   
   function sign(callback){
     current_url["sign"] = (list["sign"]||[]).shift();
+    running = "sign";
     if(!current_url["sign"]){
       console.warn(current_url["sign"]);
       notify({title:"All shops are signed!",items:[{title:"Operation",message:"Sign"},{title:"counter",message:counter["sign"]},{title:"beans",message: beans["sign"]}]});
@@ -253,6 +258,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     var match,
     current_url = (list["draw"]||[]).shift();
     console.warn(current_url);
+    running = "draw";
     if(!current_url){
       notify({title:"All shops are drawed!",items:[{title:"Operaton",message:"Draw"}]});
       reset_summary();      
@@ -314,18 +320,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     }
   }
   if(request["to"] == "background"){
-    if(request["work"] == "follow_error"){
-      if(!current_url["follow"]){
-        return;
-      }
-      var match = current_url.match(/\-(\d+).html/);
-      counter["follow"]++;
-      if(match){
-        chrome.storage.local.remove("follow" + match[1],function(results){
-          console.warn("follow" + match[1]);
-        });
-      }      
-      request["work"] = "follow";
+    if(request["work"].indexOf("error")>-1){
+      request["work"] = running;
     }
     if(request["work"] == "start_follow"){
       fetchFollowList(request["list"],function(){
@@ -484,7 +480,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             }else if(coupon["ajax"]){
               ajax(coupon,next_minute);
             } 
-          },60 * 1000 - 1000);
+          },60 * 1000 - 1500);
         });
       });
     });
@@ -506,7 +502,7 @@ function ajax(coupon,next_minute){
   var now = new Date().getTime();
   coupon["ajax"]["cache"] = false;
   $.ajax(coupon["ajax"]).done(function(result){
-    console.warn(now,coupon,result);
+    //console.warn(now,coupon,result);
     try{
       result = eval(result);
     }catch(e){
@@ -518,7 +514,7 @@ function ajax(coupon,next_minute){
         result = result && result[1];
       }      
     }    
-    //console.warn(now,coupon,result);
+    console.warn(now,coupon,result);
     if( next_minute && (now - next_minute <= 1000) && (result.ret != 999) ){
       setTimeout(function(){ajax(coupon,next_minute)},coupon.interval || (Math.random() * 100 + 150) );
     }else{
