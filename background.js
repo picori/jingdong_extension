@@ -191,12 +191,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       if(!vender_id || !shop_id){
         return next();
       }
-      //chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
+      //chrome.storage.local.set({[running + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
       $.ajax({url:`https://f-mall.jd.com/shopGift/getShopGiftInfo?venderId=${vender_id}`,cache:false,dataType:"json"}).then(function(data){
-
         if(data.result){
           if(data.giftList && data.giftList.find(function(item,index,list){return item.prizeType == 4})){
-            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":2}},function(results){});
+            chrome.storage.local.set({[running + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":2}},function(results){});
             $.ajax({
               url:"https://f-mall.jd.com/shopGift/drawShopGiftInfo",
               data: {
@@ -213,21 +212,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
               }
               if(response.result){
                 let {discount=0} = data.giftList.find(function(item,index,list){return item.prizeType == 4});
-                beans += discount;
-                notify({title:`${last_operaton} a shop with beans!`,items:[{title:"Order",message:counter},{title:"Beans",message: discount},{title:"Current Total Beans",message:beans}]});
+                beans["follow"] += discount;
+                notify({title:`${running} a shop with beans!`,items:[{title:"Order",message:counter["follow"]},{title:"Beans",message: discount},{title:"Current Total Beans",message:beans["follow"]}]});
               }              
               return next();
             },next);
           }else{
-            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
+            chrome.storage.local.set({[running + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
             return next();
           }          
         }else{    
           console.warn(data);      
           if(data.message.match(/获取店铺礼包信息失败/)){
-            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
+            chrome.storage.local.set({[running + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":1}},function(results){});
           }else if(data.message.match(/店铺未开通礼包活动/)){
-            chrome.storage.local.set({[last_operaton + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
+            chrome.storage.local.set({[running + shop_id]:{"venderId":vender_id,"shopId":shop_id,"beans":0}},function(results){});
           }else if(data.message.match(/获取礼包信息失败，传递参数有误！/)){
             return;
           }          
@@ -235,7 +234,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         }
       },next);
     }
-    getIndexPage(current_url,getShopGiftInfo);
+    getIndexPage(current_url["follow"],getShopGiftInfo);
     // if(match = current_url.match(/https?:\/\/mall\.jd\.com\/index\-(\d+)\.html/)){         
     //   getIndexPage(current_url,getShopGiftInfo);
     // }else{
@@ -275,7 +274,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           result = {"data":{"chances":0,"downgradeCanNotWin":false,"pass":true,"promptMsg":"错误！","userPin":"picori","winner":false}};
         }
         if(result["data"]["winner"]){
-          notify({title:"You are lucky!",items:[{title:"last_operaton",message:last_operaton},{title:"counter",message:counter},{title:"current_code",message: JSON.stringify(result["data"])}]});
+          notify({title:"You are lucky!",items:[{title:"last_operaton",message:running},{title:"counter",message:counter},{title:"current_code",message: JSON.stringify(result["data"])}]});
         }
         if(result["data"]["chances"]){
           drawLottery(current_code,cb);
@@ -308,14 +307,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     list["draw"] = draw_list;
     callback && callback();
   }
-  function next(type){
-    //reject && console.warn(reject);
-    counter++;
-    if(type == "follow"){
+  function next(){
+    counter[running]++;
+    if(running == "follow"){
       follow();
-    }else if(type == "sign"){
+    }else if(running == "sign"){
       sign();
-    }else if(type == "draw"){
+    }else if(running == "draw"){
       draw();
     }
   }
