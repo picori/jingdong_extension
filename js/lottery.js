@@ -49,7 +49,7 @@ function draw(lottery_code){
       }
       //result = {"data":{"chances":0,"downgradeCanNotWin":false,"pass":true,"promptMsg":"错误！","userPin":"picori","winner":false}};
     })
-  },0 * 60 * 1000 * Math.random());  
+  },10 * 1000 * Math.random());  
 }
 
 draw_lottery();
