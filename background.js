@@ -307,6 +307,71 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     list["draw"] = draw_list;
     callback && callback();
   }
+  async function search(index){
+    function getPage(cb){
+      var url = "https://mall.jd.com/index-" + index + ".html";
+      console.warn(url);
+      return $.ajax({url,dataType:"html"}).then(function(page){
+        var vender_id,shop_id;
+        //console.warn(page);
+        if(page.match(/<input type="hidden" id="vender_id" value="(\d+)" \/>/)){
+          vender_id = RegExp.$1;
+        }
+        if(page.match(/<input type="hidden" id="shop_id" value="(\d+)" \/>/)){
+          shop_id = RegExp.$1;
+        }
+        if(vender_id && shop_id){
+          chrome.storage.local.set({["shop|"+shop_id] : {shop_id,vender_id}},function(){});
+          console.warn(`${vender_id}\t${shop_id}`);
+        }else{
+          return search(++index);
+        }
+        cb(page);
+      },function(reject){
+        //console.warn(reject);
+        search(++index);
+      });
+    }
+    function analysisPage(page,cb){
+      var act_urls = page.match(/\/\/sale\.jd\.com\/act\/(\w+)\.html/g)||[];
+      function analysisActPage(){
+        var act_key = act_urls.pop();
+        if(!act_key){
+          return search(++index);
+        }        
+        chrome.storage.local.get("act|" + act_key,function(result){
+          var act_url = `https://sale.jd.com/act/${act_key}.html`;
+          if(!result["act|" + act_key]){
+            $.ajax({url:act_url,dataType:"html"}).then(function(page){
+              var match;
+              //console.warn(page.length);
+              if(match = page.match(/\{lotterycode:'([^']+)'\}/)){
+                chrome.storage.local.set({["lottery|" + match[1]]:{code:match[1],act_key}},function(){
+                  notify({'title':'Find a new lottery!',items:[{'title':'Code','message':match[1]}]});
+                });
+              }else{
+                console.warn(`act ${act_key} has no lottery`);
+              }
+              analysisActPage();
+            },function(reject){
+              analysisActPage();
+            });            
+          }
+        });
+      }
+      analysisActPage();
+    }
+    if(index){
+      chrome.storage.local.set({["current_search"] : index},function(){
+        getPage(analysisPage);
+      });      
+    }else{
+      chrome.storage.local.get("current_search",function(result){
+        search(result["current_search"]||1);
+      });
+    }
+  }
+
   function next(){
     counter[running]++;
     if(running == "follow"){
@@ -416,6 +481,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       }else{
 
       }
+    }else if(request["work"] = "start_search"){
+      console.warn("popup start_search");
+      search();
     }else if(request["work"] == "notify"){
       notify({title:"Lottery draw result!",items:[{title:"msg",message:JSON.stringify(request["info"])}]});
     }
@@ -535,7 +603,7 @@ function ajax(coupon,next_minute){
 function notify(option,callback = function(){}){
   option["iconUrl"] = "images/get_started48.png";
   option["type"] = "list";
-  option["message"] = "Work finished!";
+  option["message"] = option["message"] || "Work finished!";
   option["items"].forEach(function(item){
     item.message += "";
   });

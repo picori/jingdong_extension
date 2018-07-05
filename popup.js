@@ -187,5 +187,14 @@ $(function(){
       console.log('收到来自后台的回复：' + response);
     });    
   });
+  $("#search_lottery").click(async function(){
+    var list = ($("#lottery_list").val().match(/(https?:\/\/[^.]+\.jd\.com\/[^.]+\.html)/g)||[]);
+    //list.sort(function(a,b){return 0.5 - Math.random()});
+    $("#lottery_list").val(list.join("\n"));   
+    console.warn("popup start_search");
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_search","list":list}, function(response) {
+      console.log('收到来自后台的回复：' + response);
+    });    
+  });
   //background_page.refresh_conpon_list();
 });
