@@ -335,7 +335,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     function analysisPage(page,cb){
       var act_urls = page.match(/\/\/sale\.jd\.com\/act\/(\w+)\.html/g)||[];
       function analysisActPage(){
-        var act_key = act_urls.pop();
+        var act_url = act_urls.pop(),act_key;
+        if(!act_url){
+          return search(++index);
+        }
+        act_key = (act_url.match(/\/\/sale\.jd\.com\/act\/(\w+)\.html/)||[])[1];
         if(!act_key){
           return search(++index);
         }        
@@ -344,15 +348,25 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           if(!result["act|" + act_key]){
             $.ajax({url:act_url,dataType:"html"}).then(function(page){
               var match;
-              //console.warn(page.length);
-              if(match = page.match(/\{lotterycode:'([^']+)'\}/)){
-                chrome.storage.local.set({["lottery|" + match[1]]:{code:match[1],act_key}},function(){
-                  notify({'title':'Find a new lottery!',items:[{'title':'Code','message':match[1]}]});
+              //console.warn(page);
+              if(match = page.match(/\{lotterycode:'([^']+)'\}/m)){
+                chrome.storage.local.get("lottery|" + match[1],function(lottery){
+                  var lottery_code = match[1];
+                  if(!lottery["lottery|" + lottery_code]){
+                    chrome.storage.local.set({["lottery|" + lottery_code]:{code:lottery_code,act_key}},function(){
+                      notify({'title':'Find a new lottery!',items:[{'title':'Code','message':lottery_code}]});
+                      analysisActPage();
+                    });
+                  }else{
+                    console.warn(`Lottery ${lottery_code} is already exist!`);
+                    analysisActPage();
+                  }
                 });
               }else{
                 console.warn(`act ${act_key} has no lottery`);
+                analysisActPage();
               }
-              analysisActPage();
+              //analysisActPage();
             },function(reject){
               analysisActPage();
             });            
