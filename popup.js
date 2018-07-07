@@ -196,5 +196,23 @@ $(function(){
       console.log('收到来自后台的回复：' + response);
     });    
   });
+  $("#download_lottery_storage").click(async function(){
+    chrome.storage.local.get(null,function(results){
+      console.warn(results);
+      list = Object.keys(results).filter(function(key){return /lottery\|/.test(key)}).map(function(key){return {code:results[key]["code"],act_url:"https://sale.jd.com/act/" + results[key]["act_key"] + ".html"}});//Object.values(results);
+      var csv = CSV.encode(list, { header: true });
+      var file = new File([csv], "lottery_from_storage.csv", {type: "text/csv;charset=utf-8"});
+      saveAs(file);
+    });
+  });
+  $("#download_shop_storage").click(async function(){
+    chrome.storage.local.get(null,function(results){
+      console.warn(results);
+      list = Object.keys(results).filter(function(key){return /shop\|/.test(key)}).map(function(key){return {shop_id:results[key]["shop_id"],vender_id:results[key]["vender_id"],shop_url:"https://mall.jd.com/index-" + results[key]["shop_id"] + ".html"}});//Object.values(results);
+      var csv = CSV.encode(list, { header: true });
+      var file = new File([csv], "shop_from_storage.csv", {type: "text/csv;charset=utf-8"});
+      saveAs(file);
+    });
+  });
   //background_page.refresh_conpon_list();
 });
