@@ -142,7 +142,7 @@ function addBlocker(tab){
   // );
 }
 
-var list = {follow:[],sign:[],draw:[]};
+var list = {follow:[],sign:[],draw:[],search:[]};
 var current_tab = {follow:undefined,sign:undefined,draw:undefined};
 var current_url = {follow:undefined,sign:undefined,draw:undefined};
 var timers = {follow:undefined,sign:undefined,draw:undefined};
@@ -340,6 +340,89 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     list["draw"] = draw_list;
     callback && callback();
   }
+  async function localSearch(){
+    function getPage(cb){
+      var url = list["search"].shift();
+      if(!url){
+        return;
+      }
+      console.warn(url);
+      return $.ajax({url,dataType:"html"}).then(function(page){
+        var vender_id,shop_id;
+        //console.warn(page);
+        if(page.match(/<input type="hidden" id="vender_id" value="(\d+)" \/>/)){
+          vender_id = RegExp.$1;
+        }
+        if(page.match(/<input type="hidden" id="shop_id" value="(\d+)" \/>/)){
+          shop_id = RegExp.$1;
+        }
+        if(vender_id && shop_id){
+          chrome.storage.local.get("shop|"+shop_id,function(shop){
+            if(!shop["shop|"+shop_id]){
+              chrome.storage.local.set({["shop|"+shop_id] : {shop_id,vender_id}},function(){});
+              console.warn(`Add ${vender_id}\t${shop_id}`);              
+            }
+          });
+        }else{
+          return localSearch();
+        }   
+        cb(page);     
+      },function(reject){
+        //console.warn(reject);
+        localSearch();
+      });
+    }
+    function analysisPage(page,cb){
+      var act_urls = page.match(/\/\/sale\.jd\.com\/act\/(\w+)\.html/g)||[];
+      function analysisActPage(){
+        var act_url = act_urls.shift(),act_key;
+        if(!act_url){
+          return localSearch();
+        }
+        act_key = (act_url.match(/\/\/sale\.jd\.com\/act\/(\w+)\.html/)||[])[1];
+        if(!act_key){
+          return localSearch();
+        }        
+        chrome.storage.local.get("act|" + act_key,function(result){
+          var act_url = `https://sale.jd.com/act/${act_key}.html`;
+          if(!result["act|" + act_key]){
+            console.warn(`search ${act_url}`);            
+            $.ajax({url:act_url,dataType:"html"}).then(function(page){
+              var match;
+              //console.warn(page);
+              if(match = page.match(/\{lotterycode:'([^']+)'\}/m)){
+                chrome.storage.local.set({["act|" + act_key]:{lottery_code:match[1]}});
+                chrome.storage.local.get("lottery|" + match[1],function(lottery){
+                  var lottery_code = match[1];
+                  if(!lottery["lottery|" + lottery_code]){
+                    chrome.storage.local.set({["lottery|" + lottery_code]:{code:lottery_code,act_key}},function(){
+                      notify({'title':'Find a new lottery!',items:[{'title':'Code','message':lottery_code}]},function(id){notifications[id] = {code:lottery_code,act_key}});
+                      analysisActPage();
+                    });
+                  }else{
+                    console.warn(`Lottery ${lottery_code} is already exist!`);
+                    analysisActPage();
+                  }
+                });
+              }else{
+                chrome.storage.local.set({["act|" + act_key]:{}});
+                console.warn(`act ${act_key} has no lottery`);
+                analysisActPage();
+              }
+              //analysisActPage();
+            },function(reject){
+              analysisActPage();
+            });            
+          }else{
+            //console.warn(`needn't search ${act_url}`);
+            analysisActPage();
+          }
+        });
+      }
+      analysisActPage();
+    }
+    getPage(analysisPage);
+  }
   async function search(index){
     function getPage(cb){
       var url = "https://mall.jd.com/index-" + index + ".html";
@@ -368,7 +451,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     function analysisPage(page,cb){
       var act_urls = page.match(/\/\/sale\.jd\.com\/act\/(\w+)\.html/g)||[];
       function analysisActPage(){
-        var act_url = act_urls.pop(),act_key;
+        var act_url = act_urls.shift(),act_key;
         if(!act_url){
           return search(++index);
         }
@@ -383,6 +466,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
               var match;
               //console.warn(page);
               if(match = page.match(/\{lotterycode:'([^']+)'\}/m)){
+                chrome.storage.local.set({["act|" + act_key]:{lottery_code:match[1]}});
                 chrome.storage.local.get("lottery|" + match[1],function(lottery){
                   var lottery_code = match[1];
                   if(!lottery["lottery|" + lottery_code]){
@@ -396,6 +480,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
                   }
                 });
               }else{
+                chrome.storage.local.set({["act|" + act_key]:{}});
                 console.warn(`act ${act_key} has no lottery`);
                 analysisActPage();
               }
@@ -533,6 +618,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     }else if(request["work"] == "start_search"){
       console.warn(`popup start_search`,request);
       search();
+    }else if(request["work"] == "search_lottery_from_local_shops"){
+      list["search"] = request["list"];
+      localSearch();
     }else if(request["work"] == "update_lottery"){
       let info =  request["info"],
         {beginTime,endTime,lotteryPrize} = info;
@@ -554,7 +642,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 });  
 
 chrome.notifications.onButtonClicked.addListener(function(id){
-  window.open(notifications[id]["act_url"]);
+  window.open(notifications[id]["act_url"] || `https://sale.jd.com/act/${notifications[id]["act_key"]}.html`);
   window.focus();
   chrome.notifications.clear(id, function() {});
 });
@@ -641,10 +729,10 @@ function monitor_lottery(){
   function processs_lotteries(){
     //console.warn("processs_lotteries");
     if(lotteries.length){
-      console.warn("Last processs is still working!");
+      console.warn(`Last processs is still working! ${new Date()}`);
       return;  
     }else{
-      console.warn("Start working!");
+      console.warn(`Start working! ${new Date()}`);
     }    
     chrome.storage.local.get(null,function(items){
       lotteries = Object.keys(items).filter(function(key){return key.match(/^lottery\|/) &&

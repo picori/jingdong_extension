@@ -196,6 +196,24 @@ $(function(){
       console.log('收到来自后台的回复：' + response);
     });    
   });
+  $("#search_lottery_from_local_shops").click(async function(){
+    var list = ($("#lottery_list").val().match(/(https?:\/\/mall\.jd\.(com|hk)\/index-\d+\.html)/g)||[]);
+    $("#lottery_list").val(list.join("\n"));
+    if(list.length){
+      console.warn("popup search_lottery_from_local_shops from textarea");
+      chrome.runtime.sendMessage({"to":"background","from":"popup","work":"search_lottery_from_local_shops","list":list}, function(response) {
+        console.log('收到来自后台的回复：' + response);
+      });
+    }else{
+      chrome.storage.local.get(null,function(results){
+        list = Object.keys(results).filter(function(key){return /shop\|/.test(key)}).map(function(key){return "https://mall.jd.com/index-" + results[key]["shop_id"] + ".html"});
+        console.warn("popup search_lottery_from_local_shops from storage");
+        chrome.runtime.sendMessage({"to":"background","from":"popup","work":"search_lottery_from_local_shops","list":list}, function(response) {
+          console.log('收到来自后台的回复：' + response);
+        });    
+      });
+    }    
+  });
   $("#download_lottery_storage").click(async function(){
     chrome.storage.local.get(null,function(results){
       console.warn(results);
