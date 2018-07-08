@@ -1212,7 +1212,7 @@ if (getPageType() === 1) {
                         window.location.reload();
                     }
                 });
-                setTimeout(function(){window.postMessage({"to":"background","work":"error"}, '*');},5000);
+                //setTimeout(function(){window.postMessage({"to":"background","work":"error"}, '*');},5000);
             });
         };
         window.venderGift();

@@ -7,11 +7,16 @@
 // http://coupon.m.jd.com/coupons/show.action?key=1007aa0ba6f54a0da06d58dd94fb743d&roleId=12358353
 // http://coupon.jd.com/ilink/couponSendFront/send_index.action?key=e2c098dc77d94f8d97a9568aba5f2087&roleId=12336645&to=jd.com&cu=true
 
+
+var notifications = {};
+
 // 
 var db = new Dexie("MyDatabase");
 db.version(1).stores({
     coupon: "&key,startTime,endTime,&id,priority",
     coupon_collection: "&key,startTime,endTime,&id,priority"
+
+
 });
 
 // class Coupon {
@@ -105,7 +110,7 @@ function fetchTab(type,callback,index=0){
   //     }
   //   })
   // }
-  chrome.tabs.query({index:0}, function (tabs){
+  chrome.tabs.query({index:1}, function (tabs){
     if(!current_tab[type] || (current_tab[type].id != tabs[0].id)){
       current_tab[type] = tabs[0];     
       addBlocker(current_tab[type]);
@@ -140,9 +145,11 @@ function addBlocker(tab){
 var list = {follow:[],sign:[],draw:[]};
 var current_tab = {follow:undefined,sign:undefined,draw:undefined};
 var current_url = {follow:undefined,sign:undefined,draw:undefined};
+var timers = {follow:undefined,sign:undefined,draw:undefined};
 var running = false;
 var counter = {follow:0,sign:0,draw:0};
 var beans = {follow:0,sign:0,draw:0};
+var lotteries = [];
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {
@@ -164,7 +171,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     }
     running = "follow";
     current_url["follow"] = (list["follow"]||[]).shift();
-    console.warn(current_url["follow"]);
+    //console.warn(current_url["follow"]);
     if(!current_url["follow"]){
       notify({title:"All shops are followed!",items:[{title:"Operaton",message:"Follow"},{title:"counter",message:counter["follow"]},{title:"beans",message: beans["follow"]}]});
       reset_summary("follow");      
@@ -288,6 +295,32 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     }
     drawLottery(current_code,draw);
   }
+  function drawLottery(){
+
+  }
+  function monitorLottery(){
+    //console.warn("monitorLottery");
+    monitor_lottery();
+  }
+  function updateLotteryWinnerList(info){
+    chrome.storage.local.get(`lottery|${info["lottery_code"]}`,function(result){
+      var lottery = result[`lottery|${info["lottery_code"]}`],
+        winner_list = lottery["winner_list"]||[],
+        water_winner_list;
+      lottery["winner_list"] = winner_list = Array.from(new Set(winner_list.concat(info["winner_list"]))).sort(function(a,b){return b["winDate"].localeCompare(a["winDate"])});
+      if((water_winner_list = winner_list.filter(function(winner){return !winner["prizeName"].match(/券/) && new Date(winner["winDate"]) > new Date() - 60 * 1000 })).length >= 1){
+        console.warn(`${lottery["code"]} has water`,water_winner_list);
+        let messages = water_winner_list.map(function(winner){return {title:winner["winDate"],message:winner["prizeName"]}});
+        notify({title:lottery["code"],items:messages,buttons:[{title:"立马去抽"}]},function(id){notifications[id] = lottery;});
+        //drawLottery(lottery["lottery_code"]);
+        monitorLottery();
+      }else{
+        //console.warn(`${lottery["code"]} no water`);
+        monitorLottery();
+      }
+      chrome.storage.local.set({[`lottery|${info["lottery_code"]}`]:lottery},function(results){});
+    });    
+  }
   function fetchFollowList(url_list,callback){
     if(url_list.length){
       list["follow"] = url_list;
@@ -388,6 +421,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 
   function next(){
     counter[running]++;
+    clearTimeout(timer[running]);
     if(running == "follow"){
       follow();
     }else if(running == "sign"){
@@ -400,6 +434,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     if(request["work"].indexOf("error")>-1){
       request["work"] = running;
     }
+    //console.warn(request);
     if(request["work"] == "start_follow"){
       fetchFollowList(request["list"],function(){
         fetchTab("follow",function(){
@@ -495,15 +530,38 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       }else{
 
       }
-    }else if(request["work"] = "start_search"){
-      console.warn("popup start_search");
+    }else if(request["work"] == "start_search"){
+      console.warn(`popup start_search`,request);
       search();
+    }else if(request["work"] == "update_lottery"){
+      let info =  request["info"],
+        {beginTime,endTime,lotteryPrize} = info;
+      console.warn("update_lottery",info);
+      chrome.storage.local.get(`lottery|${info["lottery_code"]}`,function(lottery){
+        lottery = lottery[`lottery|${info["lottery_code"]}`];
+        Object.assign(lottery, {beginTime,endTime,lotteryPrize});
+        chrome.storage.local.set({[`lottery|${info["lottery_code"]}`]:lottery},function(results){
+          //console.warn(results);
+          monitorLottery(lottery);
+        });
+      });      
+    }else if(request["work"] == "update_lottery_winner_list"){
+      updateLotteryWinnerList(request["info"]);
     }else if(request["work"] == "notify"){
       notify({title:"Lottery draw result!",items:[{title:"msg",message:JSON.stringify(request["info"])}]});
     }
   }
 });  
 
+chrome.notifications.onButtonClicked.addListener(function(id){
+  window.open(notifications[id]["act_url"]);
+  window.focus();
+  chrome.notifications.clear(id, function() {});
+});
+
+chrome.notifications.onClosed.addListener(function(id){
+  //delete notifications[id];
+});
 
 // function schedule(){  
 //   var timers = schedule.timers = schedule.timers || {};
@@ -523,14 +581,28 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 //   }); 
 // }
 
+function monitor_lottery(){
+  //console.warn("monitor_lottery",lotteries);
+  var lottery = lotteries.shift();
+  if(lottery){
+    //console.warn(lottery);
+    chrome.tabs.query({index:0}, function(tabs){
+      //console.warn(tabs);
+      chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"monitor_lottery","info":lottery}, function(response){
+          //if(callback) callback(response);
+      });
+    });
+  }
+}
+
 (function schedule(){
   var now;
   var timers = {};
   function fetchTab(callback){
-    chrome.tabs.query({index:0}, function (tabs){
+    chrome.tabs.query({index:1}, function (tabs){
       if(tabs.length == 0){
         console.warn("Create new tab");
-        chrome.tabs.create({index:0},function(tab){
+        chrome.tabs.create({index:1},function(tab){
           console.warn("New tab is created");
           callback(tab);
         });
@@ -565,15 +637,33 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       });
     });
   }
+  
+  function processs_lotteries(){
+    //console.warn("processs_lotteries");
+    if(lotteries.length){
+      console.warn("Last processs is still working!");
+      return;  
+    }else{
+      console.warn("Start working!");
+    }    
+    chrome.storage.local.get(null,function(items){
+      lotteries = Object.keys(items).filter(function(key){return key.match(/^lottery\|/) &&
+       (!items[key]["endTime"] || new Date(items[key]["endTime"]) - new Date() > 0) && 
+       !items[key]["ignore"];})
+      .map(function(key){return items[key];});
+      monitor_lottery();
+    });
+  }
   chrome.alarms.onAlarm.addListener(function(alarm){
     //console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
-    process_coupon();
+    window.setTimeout(process_coupon,0);
+    window.setTimeout(processs_lotteries,0);
   });
   chrome.alarms.create("schedule", {
     when : 60 * 1000 - (now = new Date().getTime()) % 60000 + now ,
     periodInMinutes : 1
   })
-})()
+})();
 
 function ajax(coupon,next_minute){
   window["jsonpCBKA"] = window["jsonpCBKA"] || function (result){
@@ -655,7 +745,7 @@ $(function(){
   });
   $("#clear_useless_coupon").click(function(){
     chrome.tabs.query({index:0}, function(tabs){
-      console.warn(tabs);
+      //console.warn(tabs);
       chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"backgroud","work":"clear_useless_coupon"}, function(response){
           //if(callback) callback(response);
       });

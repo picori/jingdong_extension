@@ -26,10 +26,10 @@ if(window.location.href.match(/https?:\/\/mall\.jd\.(com|hk)/) || window.locatio
 }
 
 if(window.location.href.match(/https?:\/\/m\.jdpay\.(com|hk)/)){
-  console.warn(window.location.href);
+  //console.warn(window.location.href);
   injectCustomJs('js/m.js');
 }else{
-  console.warn(window.location.href);
+  //console.warn(window.location.href);
 }
 
 if(window.location.href.match(/https?:\/\/sale\.jd\.(com|hk)\/act/)){

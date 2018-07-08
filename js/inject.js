@@ -14,6 +14,20 @@ window.addEventListener("message", function(e){
       get_all_coupons();
     }else if(message.work === "clear_useless_coupon"){
       clear_useless_coupon();
+    }else if(message.work == "draw_lottery"){
+      draw_lottery(message.info.code);
+    }else if(message.work == "monitor_lottery"){
+      var lottery = message.info;
+      //console.warn(lottery);
+      if(!lottery["beginTime"] || !lottery["endTime"]){
+        get_lottery_info(lottery.code);
+      }else if(Date.parse(lottery["endTime"]) < new Date() ){
+        window.postMessage({"to":"background","work":"monitor_next_lottery"}, '*');
+      }else{
+        monitorLottery(lottery.code);
+      }      
+    }else if(message.work == "get_lottery_info"){
+      get_lottery_info(message.info.lottery_code);
     }
   }
 }, false);
@@ -128,17 +142,7 @@ function clear_useless_coupon(){
     window.postMessage({"to":"background","work":"sign","result":{"venderId": document.getElementById("vender_id").value,"beans":((document.querySelector(".jingdou .c-yellow")||{}).innerHTML * 1) || 0,"shopId":document.getElementById("shop_id").value}}, '*');
   }else if(window.location.href.match(/https?:\/\/www\.jd\.com\/error\.aspx/)){
     window.postMessage({"to":"background","work":"error"}, '*');
-  }else if(!window.location.href.match(/https?:\/\/mall\.jd\.com/)){
-    $(function(){
-      window.setTimeout(function(){
-        console.warn("Time out next!");
-        window.postMessage({"to":"background","work":"follow_error"}, '*');
-      },5000)
-    });
-  }else{
-    if($("div.error h2:contains('抱歉，您请求的地址已下线或者过期')").is(":visible")){
-      return window.postMessage({"to":"background","work":"follow_error"}, '*');
-    }
+  }else if(window.location.href.match(/https?:\/\/mall\.jd\.com/)){
     let i = 0,key;
     while(key = window.localStorage.key(i++)){
       if(key.match(/^gift/)){      
@@ -146,8 +150,70 @@ function clear_useless_coupon(){
         i--;
       } 
     }
+  }else{
+
   }
 })();
+
+function get_lottery_code(){
+  var lottery_code;
+  try{
+    lottery_code = eval($(".roulette-container").attr("module-param"));
+  }catch(e){}
+  return lottery_code;
+}
+
+function draw_lottery(lottery_code){
+  lottery_code = lottery_code || get_lottery_code();
+  if(lottery_code){
+    draw(lottery_code);
+  }else{
+    window.postMessage({"to":"background","work":"draw"}, '*');
+  }  
+}
+function get_lottery_info(lottery_code){
+  console.warn("get_lottery_info");
+  $.ajax({url:`https://ls-activity.jd.com/lotteryApi/getLotteryInfo.action?lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
+    var lottery = result["data"];
+    lottery["lottery_code"] = lottery_code;
+    //console.warn(lottery);
+    window.postMessage({"to":"background","work":"update_lottery","info":lottery}, '*');
+  },function(reject){
+    //console.warn(reject);
+  });
+}
+function monitorLottery(lottery_code){
+  $.ajax({url:`https://ls-activity.jd.com/lotteryApi/getWinnerList.action?lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
+    var lottery = {lottery_code,winner_list:result["data"]};
+    console.warn(lottery);
+    window.postMessage({"to":"background","work":"update_lottery_winner_list","info":lottery}, '*');
+  });
+}
+function draw(lottery_code){
+  setTimeout(function(){
+    $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
+      console.warn(result);
+      if(result){
+        try{
+          if(result["data"]["winner"]){
+            window.postMessage({"to":"background","work":"notify","info":result}, '*');
+          }
+          if(result["data"]["chances"]>0){
+            draw(lottery_code);
+          }else{
+            window.postMessage({"to":"background","work":"draw",result}, '*');
+          }
+        }catch(e){
+          window.postMessage({"to":"background","work":"draw",result}, '*');
+        }
+        
+      }else{
+        window.postMessage({"to":"background","work":"draw",result}, '*');
+      }
+      //result = {"data":{"chances":0,"downgradeCanNotWin":false,"pass":true,"promptMsg":"错误！","userPin":"picori","winner":false}};
+    })
+  },0 * 1000 * Math.random());  
+}
 
 
 // var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;

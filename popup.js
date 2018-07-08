@@ -205,6 +205,15 @@ $(function(){
       saveAs(file);
     });
   });
+  $("#download_raw_lottery_storage").click(async function(){
+    chrome.storage.local.get(null,function(results){
+      console.warn(results);
+      list = Object.keys(results).filter(function(key){return /lottery\|/.test(key)}).map(function(key){return results[key]});//Object.values(results);
+      //var csv = CSV.encode(list, { header: true });
+      var file = new File([JSON.stringify(list)], "raw_lottery_storage.txt", {type: "text/csv;charset=utf-8"});
+      saveAs(file);
+    });
+  });
   $("#download_shop_storage").click(async function(){
     chrome.storage.local.get(null,function(results){
       console.warn(results);
