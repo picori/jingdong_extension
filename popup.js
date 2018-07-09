@@ -97,7 +97,7 @@ $(function(){
     list.sort(function(a,b){return 0.5 - Math.random()});
     //$(this).attr("disabled","disabled");
     chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow","list":list}, function(response) {
-      console.log('收到来自后台的回复：' + response);
+      //console.log('收到来自后台的回复：' + response);
     });
   });
 
@@ -107,7 +107,7 @@ $(function(){
       //console.warn(results);
       list = Object.keys(results).filter(function(key){return /follow\d+/.test(key)}).map(function(key){return "https://mall.jd.com/index-" + results[key]["shopId"] + ".html"});//Object.values(results);
       chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_follow","list":list}, function(response) {
-        console.log('收到来自后台的回复：' + response);
+        //console.log('收到来自后台的回复：' + response);
       });
     });
   });
@@ -122,7 +122,7 @@ $(function(){
 
   $("#clear_localstorage").click(function(){
     chrome.runtime.sendMessage({"to":"content","from":"popup","work":"clear_localstorage"}, function(response) {
-      console.log('收到来自后台的回复：' + response);
+      //console.log('收到来自后台的回复：' + response);
     });
   });
 
@@ -179,12 +179,22 @@ $(function(){
       });
     });    
   });
+  $("#clear_lottery").click(function(){
+    $("#lottery_list").val("");
+  });
+  $("#add_lottery").click(function(){
+    var list = ($("#lottery_list").val().match(/(https?:\/\/sale\.jd\.com\/act\/\w+\.html)/g)||[]);
+    $("#lottery_list").val(list.join("\n"));
+    chrome.runtime.sendMessage({"to":"background","from":"popup","work":"add_lottery","list":list}, function(response) {
+      //console.log('收到来自后台的回复：' + response);
+    });
+  });
   $("#draw_lottery").click(async function(){
     var list = ($("#lottery_list").val().match(/(https?:\/\/sale\.jd\.com\/act\/\w+\.html)/g)||[]);
     list.sort(function(a,b){return 0.5 - Math.random()});
     $("#lottery_list").val(list.join("\n"));   
     chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_draw","list":list}, function(response) {
-      console.log('收到来自后台的回复：' + response);
+      //console.log('收到来自后台的回复：' + response);
     });    
   });
   $("#search_lottery").click(async function(){
@@ -193,7 +203,7 @@ $(function(){
     $("#lottery_list").val(list.join("\n"));   
     console.warn("popup start_search");
     chrome.runtime.sendMessage({"to":"background","from":"popup","work":"start_search","list":list}, function(response) {
-      console.log('收到来自后台的回复：' + response);
+      //console.log('收到来自后台的回复：' + response);
     });    
   });
   $("#search_lottery_from_local_shops").click(async function(){
@@ -202,14 +212,14 @@ $(function(){
     if(list.length){
       console.warn("popup search_lottery_from_local_shops from textarea");
       chrome.runtime.sendMessage({"to":"background","from":"popup","work":"search_lottery_from_local_shops","list":list}, function(response) {
-        console.log('收到来自后台的回复：' + response);
+        //console.log('收到来自后台的回复：' + response);
       });
     }else{
       chrome.storage.local.get(null,function(results){
         list = Object.keys(results).filter(function(key){return /shop\|/.test(key)}).map(function(key){return "https://mall.jd.com/index-" + results[key]["shop_id"] + ".html"});
         console.warn("popup search_lottery_from_local_shops from storage");
         chrome.runtime.sendMessage({"to":"background","from":"popup","work":"search_lottery_from_local_shops","list":list}, function(response) {
-          console.log('收到来自后台的回复：' + response);
+          //console.log('收到来自后台的回复：' + response);
         });    
       });
     }    

@@ -145,7 +145,7 @@ function addBlocker(tab){
 var list = {follow:[],sign:[],draw:[],search:[]};
 var current_tab = {follow:undefined,sign:undefined,draw:undefined};
 var current_url = {follow:undefined,sign:undefined,draw:undefined};
-var timers = {follow:undefined,sign:undefined,draw:undefined};
+var timer = {follow:undefined,sign:undefined,draw:undefined};
 var running = false;
 var counter = {follow:0,sign:0,draw:0};
 var beans = {follow:0,sign:0,draw:0};
@@ -177,7 +177,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       reset_summary("follow");      
       return callback && callback();
     }
-    chrome.tabs.update(current_tab["follow"].id, {url:current_url["follow"]},callback);
+    chrome.tabs.update(current_tab["follow"].id, {url:current_url["follow"]},function(){
+      timer["follow"] = window.setTimeout(next,5000);
+    });
     return;
     function getIndexPage(url,cb){
       return $.ajax({url,dataType:"html"}).then(function(page){
@@ -273,6 +275,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     chrome.tabs.update(current_tab["draw"].id, {url:current_url},callback);
     return;
     function drawLottery(lottery_code,cb){
+      //mobile https://l-activity.jd.com/mobile/lottery_start.action?authType=2&lotteryCode=2bdbfbd9-8aca-431f-9b63-8f8c9ac3107a&cookieValue=B056FA7BF7359F67185445BD265C973A&_=1531110840140&callback=Zepto1531110830176
       return $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?&lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
         console.warn(result);
         try{
@@ -295,6 +298,56 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     }
     drawLottery(current_code,draw);
   }
+  function add_lottery(list){
+    var act_urls = list;
+    function analysisActPage(){
+      var act_url = act_urls.shift(),act_key;
+      if(!act_url){
+        console.warn("add finished");
+        return;
+      }
+      act_key = (act_url.match(/\/\/sale\.jd\.com\/act\/(\w+)\.html/)||[])[1];
+      if(!act_key){
+        return;
+      }        
+      chrome.storage.local.get("act|" + act_key,function(result){
+        var act_url = `https://sale.jd.com/act/${act_key}.html`;
+        if(!result["act|" + act_key]){
+          console.warn(`search ${act_url}`);            
+          $.ajax({url:act_url,dataType:"html"}).then(function(page){
+            var match;
+            //console.warn(page);
+            if(match = page.match(/lotterycode:'([^']+)'/m)){
+              chrome.storage.local.set({["act|" + act_key]:{lottery_code:match[1]}});
+              chrome.storage.local.get("lottery|" + match[1],function(lottery){
+                var lottery_code = match[1];
+                if(!lottery["lottery|" + lottery_code]){
+                  chrome.storage.local.set({["lottery|" + lottery_code]:{code:lottery_code,act_key}},function(){
+                    notify({'title':'Find a new lottery!',items:[{'title':'Code','message':lottery_code}]},function(id){notifications[id] = {code:lottery_code,act_key}});
+                    analysisActPage();
+                  });
+                }else{
+                  console.warn(`Lottery ${lottery_code} is already exist!`);
+                  analysisActPage();
+                }
+              });
+            }else{
+              chrome.storage.local.set({["act|" + act_key]:{}});
+              console.warn(`act ${act_key} has no lottery`);
+              analysisActPage();
+            }
+            //analysisActPage();
+          },function(reject){
+            analysisActPage();
+          });            
+        }else{
+          //console.warn(`needn't search ${act_url}`);
+          analysisActPage();
+        }
+      });
+    }
+    analysisActPage()
+  }
   function drawLottery(){
 
   }
@@ -307,8 +360,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       var lottery = result[`lottery|${info["lottery_code"]}`],
         winner_list = lottery["winner_list"]||[],
         water_winner_list;
-      lottery["winner_list"] = winner_list = Array.from(new Set(winner_list.concat(info["winner_list"]))).sort(function(a,b){return b["winDate"].localeCompare(a["winDate"])});
-      if((water_winner_list = winner_list.filter(function(winner){return !winner["prizeName"].match(/券/) && new Date(winner["winDate"]) > new Date() - 60 * 1000 })).length >= 1){
+      lottery["winner_list"] = winner_list = Array.from(new Set(winner_list.concat(info["winner_list"]).map(function(winner){return JSON.stringify(winner);}))).map(function(winner){return JSON.parse(winner);}).sort(function(a,b){return b["winDate"].localeCompare(a["winDate"])});
+      if((water_winner_list = winner_list.filter(function(winner){return !winner["prizeName"].match(/券/) && new Date(winner["winDate"]) > new Date() - 60 * 2 * 1000 })).length >= 1){
         console.warn(`${lottery["code"]} has water`,water_winner_list);
         let messages = water_winner_list.map(function(winner){return {title:winner["winDate"],message:winner["prizeName"]}});
         notify({title:lottery["code"],items:messages,buttons:[{title:"立马去抽"}]},function(id){notifications[id] = lottery;});
@@ -390,7 +443,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
             $.ajax({url:act_url,dataType:"html"}).then(function(page){
               var match;
               //console.warn(page);
-              if(match = page.match(/\{lotterycode:'([^']+)'\}/m)){
+              if(match = page.match(/lotterycode:'([^']+)'/m)){
                 chrome.storage.local.set({["act|" + act_key]:{lottery_code:match[1]}});
                 chrome.storage.local.get("lottery|" + match[1],function(lottery){
                   var lottery_code = match[1];
@@ -558,7 +611,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       beans["sign"] += result["beans"];
       if(result.shopId){
         if(result["beans"]){
-          notify({title:`Followed a shop with beans!`,items:[{title:"Order",message:counter["sign"]},{title:"Beans",message: result["beans"]},{title:"Current Total Beans",message:beans["sign"]}]});
+          notify({title:`Signed a shop with beans!`,items:[{title:"Order",message:counter["sign"]},{title:"Beans",message: result["beans"]},{title:"Current Total Beans",message:beans["sign"]}]});
         }
         result["beans"] = 1;
         chrome.storage.local.set({["sign" + result.shopId]:result},function(results){});
@@ -582,39 +635,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
           //console.warn(result);
         });
       });
-    }else if(request["work"] == "collect_coupon"){
-      if(request["coupon"]){
-        let {ajax,info} = request["coupon"];
-        console.warn(ajax);
-        chrome.storage.sync.set({["coupon"+ajax["data"]["key"]]:{ajax,info}},function(results){
-          console.warn(results);
-        });
-      }else if(request["couponList"]){
-        request["couponList"].forEach(function(coupon){
-          if(coupon.quota - coupon.denomination == 1){
-            coupon.priority = 1;
-          }else if(coupon.denomination / coupon.quota >= 0.9){
-            coupon.priority = 10;
-          }else if(coupon.remindPeople){
-            coupon.priority = 20;
-          }else if(coupon.shopId){
-            coupon.priority = 100;
-          }else{
-            coupon.priority = 50;
-          }
-          if(!coupon.key){
-            console.warn(coupon);
-            return;
-          }          
-          //db.coupon_collection.put(coupon).then(function(){},function(result){console.warn(coupon)});
-          db.coupon.put(coupon).then(function(){},function(result){console.warn(coupon)});
-          // chrome.storage.local.set({["coupon" + coupon["key"]]:{coupon}},function(results){
-          //   console.warn(results);
-          // });
-        });
-      }else{
-
-      }
+    }else if(request["work"] == "add_lottery"){
+      console.warn(request["list"]);
+      add_lottery(request["list"]);
     }else if(request["work"] == "start_search"){
       console.warn(`popup start_search`,request);
       search();

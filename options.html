@@ -8,6 +8,20 @@
       .bd-highlight {
         border: 1px solid #FFFFFF;
       }
+      nav a.focus{
+        color:red;
+        font-weight:bolder;
+      }
+      .panel.focus {        
+        display:block;
+      }
+      .panel {
+        display:none;        
+      }
+      .list {
+        height:500px;
+        overflow-y: auto;
+      }
     </style>
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/jquery.datetimepicker.full.min.js"></script>
@@ -18,7 +32,11 @@
     <script src="js/FileSaver.js"></script>
   </head>
   <body>
-    <div class="panel">
+    <nav class="navbar">
+      <a href="#" class="focus nav-item">优惠券</a>
+      <a href="#" class="nav-item">抽奖</a>
+    </nav>
+    <div class="panel focus">
       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text">Key</span>
@@ -31,30 +49,12 @@
         </div>
         <input type="text" id="role_id" class="form-control" />
       </div>
-      <!--<div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text">To</span>
-        </div>
-        <input type="text" id="to" class="form-control" />
-      </div>-->      
       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text">Name</span>
         </div>
         <input type="text" id="name" class="form-control" />
       </div>
-      <!--<div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text">Coupon URL</span>
-        </div>
-        <input type="text" id="coupon_url" class="form-control" />
-      </div>
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text">Click</span>
-        </div>
-        <input type="text" id="click" class="form-control" />
-      </div>-->
       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text">Ajax</span>
@@ -90,13 +90,7 @@
       </div>
       <button type="button" class="btn btn-primary" id="add_coupon">添加优惠券</button>
       <button type="button" class="btn btn-primary" id="clear_useless_coupon">清除垃圾优惠券</button>
-<!--       <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text">执行时间</span>
-        </div>
-        <input type="text" id="datetimepicker" class="form-control" />
-      </div> -->
-      <div class="accordion" id="accordion">
+      <div class="accordion list" id="accordion">
         <!--<a href="#" class="list-group-item list-group-item-action">Dapibus ac facilisis in</a>        
         <a href="#" class="list-group-item list-group-item-action list-group-item-primary">A simple primary list group item</a>
         <a href="#" class="list-group-item list-group-item-action list-group-item-secondary">A simple secondary list group item</a>
@@ -110,6 +104,64 @@
       <table class="table collapse" id="timeline">
         
       </table>`
+    </div>
+    <div class="panel">
+      <div class="info">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Key</span>
+          </div>
+          <input type="text" id="lottery_code" class="form-control" />
+        </div>
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Act Key</span>
+          </div>
+          <input type="text" id="lottery_act_key" class="form-control" />
+        </div>
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Start Time</span>
+          </div>
+          <span class="input-group-text" id="lottery_start_time" ></span>
+        </div>   
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text">End Time</span>
+          </div>
+          <span class="input-group-text" id="lottery_end_time" ></span>
+        </div>
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Random Time Range</span>
+          </div>
+          <input type="text" id="lottery_time_range" class="form-control" />
+        </div>
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Memo</span>
+          </div>
+          <textarea class="form-control" id="lottery_memo" aria-label="Ajax"></textarea>
+        </div>
+        <div class="accordion" id="lottery_prize">
+          <div class="card">
+            <div class="input-group card-header" id="lottery_prize_heading"><a title="" href="#" data-toggle="collapse" data-target="#lottery_collapse_prize" aria-expanded="true" aria-controls="lottery_collapse_prize" class="list-group-item list-group-item-action input-group-text">奖品列表</a></div>
+            <div id="lottery_collapse_prize" class="collapse" aria-labelledby="lottery_prize_heading" data-parent="#lottery_accordion">
+              
+            </div>
+          </div>
+        </div>
+        <div class="input-group">        
+          <div class="input-group-prepend">
+            <span class="input-group-text"><input type="checkbox" id="lottery_ignore" value="1" />是否忽略</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="add_lottery">添加/修改抽奖</button>
+        <button type="button" class="btn btn-primary" id="clear_useless_lottery">清除过期抽奖</button>
+        <span class="input-group-text"><span><input type="checkbox" id="lottery_hide_ignored" value="1" />隐藏忽略</span><span><input type="checkbox" id="lottery_hide_expired" value="1" />隐藏过期</span></span>
+      </div>
+      <div class="accordion list" id="lottery_accordion">
+      </div>
     </div>
   </body>
   <script src="options.js"></script>
