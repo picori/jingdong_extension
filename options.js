@@ -93,13 +93,14 @@ function refresh_lottery_list(){
     hide_expired = $("#lottery_hide_expired").is(":checked");
   $("#lottery_accordion").empty();
   chrome.storage.local.get(null,function(results){
+    var counter = 0;
     Object.keys(results).filter(function(key){return /^lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() ) }).forEach(function(key){
       //console.warn(key);
       var lottery = results[key];
       var wrapper_div = $(`<div class="card"></div>`);
       wrapper_div.data("lottery",lottery);
       var operation_wrapper_div = $(`<div class="input-group card-header" id="heading_${key}"></div>`);
-      var lottery_a = $(`<div class="input-group-prepend"><a title="${key}" href="#" data-toggle="collapse" data-target="#collapse_${key}" aria-expanded="true" aria-controls="collapse_${key}" class="list-group-item list-group-item-action input-group-text">${lottery.code}</a></div>`);
+      var lottery_a = $(`<div class="input-group-prepend"><a title="${key}" href="#" data-toggle="collapse" data-target="#collapse_${key}" aria-expanded="true" aria-controls="collapse_${key}" class="list-group-item list-group-item-action input-group-text">${"["+ ++counter + "]" + lottery.code}</a></div>`);
       var datetimepicker = $(`<input type="text" class="form-control datetimepicker" />`).datetimepicker();
       var add_schedule = $(`<button type="button" class="btn btn-primary" id="add_schedule">添加时间</button>`);
       var delete_lottery = $(`<button type="button" class="btn btn-primary" id="delete_lottery">删除抽奖</button>`);
@@ -120,7 +121,7 @@ function refresh_lottery_list(){
       });
       lottery_a.click(function(){
         $("#lottery_code").val(lottery["code"]);
-        $("#lottery_act_url").val(lottery["act_url"]||`https://sale.jd.com/act/${lottery["act_key"]}.html`);
+        $("#lottery_act_key").val(lottery["act_key"]||lottery["act_url"].match(/\/\/sale\.jd\.com\/act\/(\w+)\.html/)[1]);
         $("#lottery_start_time").html(lottery["beginTime"]);
         $("#lottery_end_time").html(lottery["endTime"]);
         $("#lottery_time_range").val(lottery["time_range"]||0);
@@ -130,6 +131,10 @@ function refresh_lottery_list(){
         $("#lottery_prize_list").empty();
         (lottery["lotteryPrize"]||[]).forEach(function(prize){
           $("#lottery_prize_list").append(`<div class="p-2 bg-primary bd-highlight text-white">${prize.prizeName}</div>`);
+        });
+        $("#lottery_winner_list").empty();
+        (lottery["winner_list"]||[]).forEach(function(winner){
+          $("#lottery_winner_list").append(`<div class="d-flex align-content-start bd-highlight flex-wrap"><div class="p-2 bg-primary bd-highlight text-white">${winner["winDate"]}</div><div class="p-2 bg-primary bd-highlight text-white">${winner["prizeName"]}</div><div class="p-2 bg-primary bd-highlight text-white">${winner["userPin"]}</div></div>`);
         });
         refresh_schedule();
       });
@@ -251,7 +256,7 @@ $(function(){
     hide_expired = $("#lottery_hide_expired").is(":checked");
     chrome.storage.local.get(null,function(results){
       console.warn(results);
-      list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return {code:results[key]["code"],act_url:"https://sale.jd.com/act/" + results[key]["act_key"] + ".html"}});//Object.values(results);
+      var list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return {code:results[key]["code"],act_url:"https://sale.jd.com/act/" + results[key]["act_key"] + ".html"}});//Object.values(results);
       var csv = CSV.encode(list, { header: true });
       var file = new File([csv], "lottery_from_storage.csv", {type: "text/csv;charset=utf-8"});
       saveAs(file);
@@ -262,7 +267,7 @@ $(function(){
     hide_expired = $("#lottery_hide_expired").is(":checked");
     chrome.storage.local.get(null,function(results){
       console.warn(results);
-      list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return results[key]});//Object.values(results);
+      var list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return results[key]});//Object.values(results);
       //var csv = CSV.encode(list, { header: true });
       var file = new File([JSON.stringify(list)], "raw_lottery_from_storage.txt", {type: "text/csv;charset=utf-8"});
       saveAs(file);
