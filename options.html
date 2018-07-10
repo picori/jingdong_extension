@@ -115,9 +115,10 @@
         </div>
         <div class="input-group">
           <div class="input-group-prepend">
-            <span class="input-group-text">Act Key</span>
+            <span class="input-group-text">Act URL</span>
           </div>
-          <input type="text" id="lottery_act_key" class="form-control" />
+          <input type="text" id="lottery_act_url" class="form-control" />
+          <button type="button" class="btn btn-primary" id="lottery_act_url_button">跳转</button>
         </div>
         <div class="input-group">
           <div class="input-group-prepend">
@@ -143,19 +144,19 @@
           </div>
           <textarea class="form-control" id="lottery_memo" aria-label="Ajax"></textarea>
         </div>
-        <div class="accordion" id="lottery_prize">
-          <div class="card">
-            <div class="input-group card-header" id="lottery_prize_heading"><a title="" href="#" data-toggle="collapse" data-target="#lottery_collapse_prize" aria-expanded="true" aria-controls="lottery_collapse_prize" class="list-group-item list-group-item-action input-group-text">奖品列表</a></div>
-            <div id="lottery_collapse_prize" class="collapse" aria-labelledby="lottery_prize_heading" data-parent="#lottery_accordion">
-              
-            </div>
-          </div>
-        </div>
         <div class="input-group">        
           <div class="input-group-prepend">
             <span class="input-group-text"><input type="checkbox" id="lottery_ignore" value="1" />是否忽略</span>
           </div>
         </div>
+        <div class="accordion" id="lottery_prize">
+          <div class="card">
+            <div class="input-group card-header" id="lottery_prize_heading"><a title="" href="#" data-toggle="collapse" data-target="#lottery_collapse_prize" aria-expanded="true" aria-controls="lottery_collapse_prize" class="list-group-item list-group-item-action input-group-text">奖品列表</a></div>
+            <div id="lottery_collapse_prize" class="collapse" aria-labelledby="lottery_prize_heading" data-parent="#lottery_accordion">
+              <div id="lottery_prize_list" class="card-body d-flex align-content-start bd-highlight flex-wrap"></div>
+            </div>
+          </div>
+        </div>        
         <button type="button" class="btn btn-primary" id="add_lottery">添加/修改抽奖</button>
         <button type="button" class="btn btn-primary" id="clear_useless_lottery">清除过期抽奖</button>
         <span class="input-group-text"><span><input type="checkbox" id="lottery_hide_ignored" value="1" />隐藏忽略</span><span><input type="checkbox" id="lottery_hide_expired" value="1" />隐藏过期</span></span>

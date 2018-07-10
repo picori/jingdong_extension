@@ -120,16 +120,16 @@ function refresh_lottery_list(){
       });
       lottery_a.click(function(){
         $("#lottery_code").val(lottery["code"]);
-        $("#lottery_act_key").val(lottery["act_key"]);
+        $("#lottery_act_url").val(lottery["act_url"]);
         $("#lottery_start_time").html(lottery["beginTime"]);
         $("#lottery_end_time").html(lottery["endTime"]);
         $("#lottery_time_range").val(lottery["time_range"]||0);
         $("#lottery_memo").val(lottery["memo"]||"");
         $("#lottery_ignore").prop("checked",lottery["ignore"] ? "checked" : false);
         $("#lottery_prize").data("prize_list",lottery["lotteryPrize"]||[]);
-        $("#lottery_collapse_prize").empty();
+        $("#lottery_prize_list").empty();
         (lottery["lotteryPrize"]||[]).forEach(function(prize){
-          $("#lottery_collapse_prize").append(`<div class="p-2 bg-primary bd-highlight text-white">${prize.prizeName}</div>`);
+          $("#lottery_prize_list").append(`<div class="p-2 bg-primary bd-highlight text-white">${prize.prizeName}</div>`);
         });
         refresh_schedule();
       });
@@ -231,21 +231,17 @@ $(function(){
   $("#add_lottery").click(function(){
     var code = $("#lottery_code").val().trim(),
       act_key = $("#lottery_act_key").val().trim(),
+      act_url = `https://sale.jd.com/act/${act_key}.html`,
       time_range = ($("#lottery_time_range").val().trim() || 0) * 1,
       ignore = $("#lottery_ignore:checked").length;
-    console.warn({code,act_key,time_range,ignore});
+    console.warn({code,act_url,time_range,ignore});
     //return;
-    chrome.storage.local.set({["lottery|"+ code] : {code,act_key,ignore,time_range}},function(){
+    chrome.storage.local.set({["lottery|"+ code] : {code,act_url,ignore,time_range}},function(){
       refresh_lottery_list();
     });
   });
-  $("#lottery_prize .card-header").click(function(){
-    // var prize_list = $("#lottery_prize").data("prize_list");
-    // console.warn(prize_list);
-    // $("#lottery_prize").find(".card-body").remove();
-    // prize_list.forEach(function(prize){
-    //   $("#lottery_prize").append(`<div class="card-body d-flex align-content-start bd-highlight flex-wrap">${prize.prizeName}</div>`);
-    // });    
+  $("#lottery_act_url_button").click(function(){
+    window.open($("#lottery_act_url").val());    
   });
   $("#clear_useless_coupon").click(function(){
     chrome.tabs.query({index:0}, function(tabs){
