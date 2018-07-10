@@ -94,7 +94,7 @@ function refresh_lottery_list(){
   $("#lottery_accordion").empty();
   chrome.storage.local.get(null,function(results){
     var counter = 0;
-    Object.keys(results).filter(function(key){return /^lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() ) }).forEach(function(key){
+    Object.keys(results).filter(function(key){return /^lottery\|/.test(key) && ( !!hide_ignored == !!results[key]["ignore"] ) && ( !!hide_expired != new Date(results[key]["endTime"]) >= new Date() ) }).forEach(function(key){
       //console.warn(key);
       var lottery = results[key];
       var wrapper_div = $(`<div class="card"></div>`);
@@ -256,7 +256,7 @@ $(function(){
     hide_expired = $("#lottery_hide_expired").is(":checked");
     chrome.storage.local.get(null,function(results){
       console.warn(results);
-      var list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return {code:results[key]["code"],act_url:"https://sale.jd.com/act/" + results[key]["act_key"] + ".html"}});//Object.values(results);
+      var list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !!hide_ignored == !!results[key]["ignore"] ) && ( !!hide_expired != new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return {code:results[key]["code"],act_url:"https://sale.jd.com/act/" + results[key]["act_key"] + ".html"}});//Object.values(results);
       var csv = CSV.encode(list, { header: true });
       var file = new File([csv], "lottery_from_storage.csv", {type: "text/csv;charset=utf-8"});
       saveAs(file);
@@ -267,7 +267,7 @@ $(function(){
     hide_expired = $("#lottery_hide_expired").is(":checked");
     chrome.storage.local.get(null,function(results){
       console.warn(results);
-      var list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return results[key]});//Object.values(results);
+      var list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !!hide_ignored == !!results[key]["ignore"] ) && ( !!hide_expired != new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return results[key]});//Object.values(results);
       //var csv = CSV.encode(list, { header: true });
       var file = new File([JSON.stringify(list)], "raw_lottery_from_storage.txt", {type: "text/csv;charset=utf-8"});
       saveAs(file);
