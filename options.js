@@ -120,7 +120,7 @@ function refresh_lottery_list(){
       });
       lottery_a.click(function(){
         $("#lottery_code").val(lottery["code"]);
-        $("#lottery_act_url").val(lottery["act_url"]);
+        $("#lottery_act_url").val(lottery["act_url"]||`https://sale.jd.com/act/${lottery["act_key"]}.html`);
         $("#lottery_start_time").html(lottery["beginTime"]);
         $("#lottery_end_time").html(lottery["endTime"]);
         $("#lottery_time_range").val(lottery["time_range"]||0);
@@ -231,17 +231,42 @@ $(function(){
   $("#add_lottery").click(function(){
     var code = $("#lottery_code").val().trim(),
       act_key = $("#lottery_act_key").val().trim(),
-      act_url = `https://sale.jd.com/act/${act_key}.html`,
       time_range = ($("#lottery_time_range").val().trim() || 0) * 1,
       ignore = $("#lottery_ignore:checked").length;
-    console.warn({code,act_url,time_range,ignore});
+    console.warn({code,act_key,time_range,ignore});
     //return;
-    chrome.storage.local.set({["lottery|"+ code] : {code,act_url,ignore,time_range}},function(){
-      refresh_lottery_list();
+    chrome.storage.local.get("lottery|"+ code,function(lottery){
+      lottery = lottery["lottery|"+ code];
+      Object.assign(lottery,{code,act_key,time_range,ignore});
+      chrome.storage.local.set({["lottery|"+ code] : lottery},function(){
+        refresh_lottery_list();
+      });
     });
   });
   $("#lottery_act_url_button").click(function(){
-    window.open($("#lottery_act_url").val());    
+    window.open("https://sale.jd.com/act/" + $("#lottery_act_key").val().trim() + ".html");    
+  });
+  $("#download_lottery_storage").click(async function(){
+    var hide_ignored = $("#lottery_hide_ignored").is(":checked"),
+    hide_expired = $("#lottery_hide_expired").is(":checked");
+    chrome.storage.local.get(null,function(results){
+      console.warn(results);
+      list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return {code:results[key]["code"],act_url:"https://sale.jd.com/act/" + results[key]["act_key"] + ".html"}});//Object.values(results);
+      var csv = CSV.encode(list, { header: true });
+      var file = new File([csv], "lottery_from_storage.csv", {type: "text/csv;charset=utf-8"});
+      saveAs(file);
+    });
+  });
+  $("#download_raw_lottery_storage").click(async function(){
+    var hide_ignored = $("#lottery_hide_ignored").is(":checked"),
+    hide_expired = $("#lottery_hide_expired").is(":checked");
+    chrome.storage.local.get(null,function(results){
+      console.warn(results);
+      list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !hide_ignored || !results[key]["ignore"] ) && ( !hide_expired || new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return results[key]});//Object.values(results);
+      //var csv = CSV.encode(list, { header: true });
+      var file = new File([JSON.stringify(list)], "raw_lottery_from_storage.txt", {type: "text/csv;charset=utf-8"});
+      saveAs(file);
+    });
   });
   $("#clear_useless_coupon").click(function(){
     chrome.tabs.query({index:0}, function(tabs){
@@ -251,9 +276,7 @@ $(function(){
       });
     });    
   });
-  $("#test_coupon").click(function(){
-    $.ajax({url:"m.jdpay.com/marketing/jdm/takeprize?entranceId=aCUDh3dkeKaIHk&",dataType:"html"}).then(function(page){
-      page
-    });    
+  $("#test_lottery").click(function(){
+  
   });
 })
