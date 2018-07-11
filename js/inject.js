@@ -167,8 +167,6 @@ function draw_lottery(lottery_code){
   lottery_code = lottery_code || get_lottery_code();
   if(lottery_code){
     draw(lottery_code);
-  }else{
-    window.postMessage({"to":"background","work":"draw"}, '*');
   }  
 }
 function get_lottery_info(lottery_code){
@@ -196,23 +194,22 @@ function draw(lottery_code){
       if(result){
         try{
           if(result["data"]["winner"]){
-            window.postMessage({"to":"background","work":"notify","info":result}, '*');
+            window.postMessage({"to":"background","work":"report_draw_result","info":result}, '*');
           }
           if(result["data"]["chances"]>0){
             draw(lottery_code);
           }else{
-            window.postMessage({"to":"background","work":"draw",result}, '*');
+            window.postMessage({"to":"background","work":"report_draw_result",result}, '*');
           }
         }catch(e){
-          window.postMessage({"to":"background","work":"draw",result}, '*');
-        }
-        
+          window.postMessage({"to":"background","work":"report_draw_result",result}, '*');
+        }        
       }else{
-        window.postMessage({"to":"background","work":"draw",result}, '*');
+        window.postMessage({"to":"background","work":"report_draw_result",result}, '*');
       }
       //result = {"data":{"chances":0,"downgradeCanNotWin":false,"pass":true,"promptMsg":"错误！","userPin":"picori","winner":false}};
     })
-  },0 * 1000 * Math.random());  
+  },0);  
 }
 
 

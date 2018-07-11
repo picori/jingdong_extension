@@ -99,13 +99,13 @@ function refresh_lottery_list(){
       var lottery = results[key];
       var wrapper_div = $(`<div class="card"></div>`);
       wrapper_div.data("lottery",lottery);
-      var operation_wrapper_div = $(`<div class="input-group card-header" id="heading_${key}"></div>`);
-      var lottery_a = $(`<div class="input-group-prepend"><a title="${key}" href="#" data-toggle="collapse" data-target="#collapse_${key}" aria-expanded="true" aria-controls="collapse_${key}" class="list-group-item list-group-item-action input-group-text">${"["+ ++counter + "]" + lottery.code}</a></div>`);
+      var operation_wrapper_div = $(`<div class="input-group card-header" id="heading_${key.replace(/\W/g,"")}"></div>`);
+      var lottery_a = $(`<div class="input-group-prepend"><a title="${key.replace(/\W/g,"")}" href="#" data-toggle="collapse" data-target="#collapse_${key.replace(/\W/g,"")}" aria-expanded="true" aria-controls="collapse_${key.replace(/\W/g,"")}" class="list-group-item list-group-item-action input-group-text">${"["+ ++counter + "]" + lottery.code}</a></div>`);
       var datetimepicker = $(`<input type="text" class="form-control datetimepicker" />`).datetimepicker();
       var add_schedule = $(`<button type="button" class="btn btn-primary" id="add_schedule">添加时间</button>`);
       var delete_lottery = $(`<button type="button" class="btn btn-primary" id="delete_lottery">删除抽奖</button>`);
       var test_lottery = $(`<button type="button" class="btn btn-primary" id="test_lottery">测试抽奖</button>`);
-      var timeline_wrapper_div = $(`<div id="collapse_${key}" class="collapse" aria-labelledby="heading_${key}" data-parent="#lottery_accordion">`);
+      var timeline_wrapper_div = $(`<div id="collapse_${key.replace(/\W/g,"")}" class="collapse" aria-labelledby="heading_${key.replace(/\W/g,"")}" data-parent="#lottery_accordion">`);
       var card_body = $(`<div class="card-body d-flex align-content-start bd-highlight flex-wrap"></div>`);
       var close_button = $(`<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>`);
       operation_wrapper_div.append(close_button).append(lottery_a).append(test_lottery).append(datetimepicker).append(add_schedule).appendTo(wrapper_div);
@@ -144,7 +144,7 @@ function refresh_lottery_list(){
           Object.keys(results).filter(function(key){return /^schedule\|lottery/.test(key)}).sort().forEach(function(schedule_key){                
             if(results[schedule_key][key]){
               let close_button = $(`<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>`),
-                time_point = $(`<div class="p-2 bg-primary bd-highlight text-white">${dateformat(new Date(schedule_key.substring(8)*1))}</div>`);
+                time_point = $(`<div class="p-2 bg-primary bd-highlight text-white">${dateformat(new Date(schedule_key.match(/schedule\|lottery\|(\d+)/)[1]*1))}</div>`);
               time_point.append(close_button);
               close_button.click(function(){
                 chrome.storage.sync.get(schedule_key,function(result){
@@ -167,8 +167,10 @@ function refresh_lottery_list(){
           return;
         }
         chrome.storage.sync.get("schedule|lottery|"+time,function(schedule){
+          var {code,act_key,act_url,time_range} = results[key];
           schedule = schedule["schedule|lottery|"+time] || {};
-          schedule[key] = results[key];
+          schedule[key] = {code,act_key,act_url,time_range};
+          console.warn("schedule|lottery|"+time);
           chrome.storage.sync.set({["schedule|lottery|"+time] : schedule},function(){
             //timeline
             console.warn(schedule[key]);

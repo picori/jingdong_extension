@@ -750,6 +750,32 @@ function monitor_lottery(){
   }
   
   function processs_lotteries(){
+    chrome.storage.sync.get(null,function(items){
+      var now = new Date().getTime();
+      var next_minute = now - now % (60 * 1000) + 60 * 1000;
+      var schedules = Object.keys(items).filter(function(key){return key.match(/^schedule\|lottery\|(\d+)/) && RegExp.$1 < next_minute; }).forEach(function(key){
+        console.warn(key + " is removed!",schedules);
+        chrome.storage.sync.remove(key);
+      });
+      var schedules =  Object.keys(items).filter(function(key){return new RegExp("^schedule\\\|lottery\\\|"+next_minute).test(key);});
+      schedules.length && console.warn("schedule|lottery|" + next_minute,schedules);
+      schedules.forEach(function(key){
+        var lotteries = Object.values(items[key]);
+        var offset; 
+        console.warn(lotteries);
+        lotteries.forEach(function(lottery){
+          setTimeout(function(){
+            chrome.tabs.query({index:0}, function(tabs){
+              chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"draw_lottery","info":lottery}, function(response){
+              });
+            });
+          },60 * 1000 + lottery["time_range"] * Math.random());
+        });
+      });
+    });
+  }
+
+  function update_lotteries(){
     //console.warn("processs_lotteries");
     if(lotteries.length){
       console.warn(`Last processs is still working! ${new Date()}`);
@@ -769,6 +795,7 @@ function monitor_lottery(){
     //console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
     window.setTimeout(process_coupon,0);
     window.setTimeout(processs_lotteries,0);
+    window.setTimeout(update_lotteries,30 * 1000);
   });
   chrome.alarms.create("schedule", {
     when : 60 * 1000 - (now = new Date().getTime()) % 60000 + now ,
