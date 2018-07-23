@@ -651,10 +651,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       chrome.storage.local.get(`lottery|${info["lottery_code"]}`,function(lottery){
         lottery = lottery[`lottery|${info["lottery_code"]}`];
         Object.assign(lottery, {beginTime,endTime,lotteryPrize});
-        chrome.storage.local.set({[`lottery|${info["lottery_code"]}`]:lottery},function(results){
-          //console.warn(results);
-          monitorLottery(lottery);
-        });
+        if(new Date(endTime) >= new Date()){
+          chrome.storage.local.set({[`lottery|${info["lottery_code"]}`]:lottery},function(results){
+            //console.warn(results);            
+          });
+        }else{
+          chrome.storage.local.remove(`lottery|${info["lottery_code"]}`,function(results){
+            //console.warn(results);            
+          });
+        }
+        monitorLottery(lottery);
       });      
     }else if(request["work"] == "update_lottery_winner_list"){
       updateLotteryWinnerList(request["info"]);
@@ -665,7 +671,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 });  
 
 chrome.notifications.onButtonClicked.addListener(function(id){
-  window.open(notifications[id]["act_url"] || `https://sale.jd.com/act/${notifications[id]["act_key"]}.html`);
+  if(notifications[id]["title"]){
+    window.open(notifications[id]["url"]);
+  }else{
+    window.open(notifications[id]["act_url"] || `https://sale.jd.com/act/${notifications[id]["act_key"]}.html`);
+  }
   window.focus();
   chrome.notifications.clear(id, function() {});
 });
@@ -749,53 +759,105 @@ function monitor_lottery(){
     });
   }
   
-  function processs_lotteries(){
+  function process_lotteries(){
     chrome.storage.sync.get(null,function(items){
       var now = new Date().getTime();
       var next_minute = now - now % (60 * 1000) + 60 * 1000;
-      var schedules = Object.keys(items).filter(function(key){return key.match(/^schedule\|lottery\|(\d+)/) && RegExp.$1 < next_minute; }).forEach(function(key){
-        console.warn(key + " is removed!",schedules);
-        chrome.storage.sync.remove(key);
-      });
-      var schedules =  Object.keys(items).filter(function(key){return new RegExp("^schedule\\\|lottery\\\|"+next_minute).test(key);});
+      next_minute = dateformat(new Date(next_minute),"hhmmss");
+
+      // var schedules = Object.keys(items).filter(function(key){return key.match(/^schedule\|lottery\|(\d+)/) && RegExp.$1 == next_minute; }).forEach(function(key){
+      //   console.warn(key + " is removed!",schedules);
+      //   chrome.storage.sync.remove(key);
+      // });
+      var schedules =  Object.keys(items).filter(function(key){return new RegExp("^schedule\\\|lottery\\\|" + next_minute).test(key);});
       schedules.length && console.warn("schedule|lottery|" + next_minute,schedules);
       schedules.forEach(function(key){
-        var lotteries = Object.values(items[key]);
+        var lotteries = Object.keys(items[key]);
         var offset; 
-        console.warn(lotteries);
-        lotteries.forEach(function(lottery){
-          setTimeout(function(){
-            chrome.tabs.query({index:0}, function(tabs){
-              chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"draw_lottery","info":lottery}, function(response){
-              });
+        
+        function process_lottery(){
+          var lottery = lotteries.shift();
+          if(!lottery){
+            chrome.storage.sync.set({[`schedule|lottery|${next_minute}`]:items[key]},function(results){
+              //console.warn(results);
             });
-          },60 * 1000 + lottery["time_range"] * Math.random());
-        });
+            return;
+          }
+          chrome.storage.local.get(lottery,function(items){
+            if(items[lottery]){
+              lottery = items[lottery];
+              if(new Date(lottery["endTime"]) < new Date()){
+                delete items[key][lottery["code"]];            
+                console.warn(`${lottery["code"]} is deleted from ${key}!`);
+              }else if(lottery["ignore"]){
+                //
+              }else{
+                console.warn(lottery,"is preparing!");
+                setTimeout(function(){
+                  chrome.tabs.query({index:0}, function(tabs){
+                    chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"draw_lottery","info":lottery}, function(response){
+                    });                
+                  });
+                },60 * 1000 + lottery["time_range"] * Math.random());
+              }
+            }else{
+              //delete items[key][lottery];        
+              console.warn(lottery);    
+              console.warn(`${lottery} is deleted from ${key}!`);
+            }
+            process_lottery();
+          });
+        }
+        process_lottery();
       });
     });
   }
 
   function update_lotteries(){
     //console.warn("processs_lotteries");
-    if(lotteries.length){
-      console.warn(`Last processs is still working! ${new Date()}`);
-      return;  
-    }else{
-      console.warn(`Start working! ${new Date()}`);
-    }    
+    // if(lotteries.length){
+    //   console.warn(`Last processs is still working! ${new Date()}`);
+    //   return;  
+    // }else{
+    //   console.warn(`Start working! ${new Date()}`);
+    // }
+    console.warn(`Start working! ${new Date()}`);    
     chrome.storage.local.get(null,function(items){
-      lotteries = Object.keys(items).filter(function(key){return key.match(/^lottery\|/) &&
-       (!items[key]["endTime"] || new Date(items[key]["endTime"]) - new Date() > 0) && 
-       !items[key]["ignore"];})
-      .map(function(key){return items[key];});
+      var all_lotteries = Object.keys(items).filter(function(key){return key.match(/^lottery\|/)}).map(function(key){return items[key];});
+      all_lotteries.forEach(function(lottery){
+        if(lottery["endTime"] && new Date(lottery["endTime"]) - new Date() < 0){
+          chrome.storage.local.remove(`lottery|${lottery["code"]}`);
+          console.warn(`lottery|${lottery["code"]} deleted!`);
+        }
+      });
+      lotteries = all_lotteries.filter(function(lottery){
+        return (!lottery["endTime"] || new Date(lottery["endTime"]) - new Date() > 0) && !lottery["ignore"];
+      });
       monitor_lottery();
+    });
+  }
+
+  function watch_zuanke8(){
+    $.ajax({url:"http://www.zuanke8.com/forum.php?mod=forumdisplay&fid=15&page=1&filter=lastpost&orderby=lastpost",cache:false,type:"html"}).then(function(html){
+      var posts = html.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>/g);
+      //console.warn(posts);
+      posts.map(function(post){
+        post = post.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>/);
+        return {url:post[1].replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&'),title:post[2]};
+      }).filter(function(post){
+        return post["title"].match(/vx|微信|大水|秒推|话费/);
+      }).forEach(function(post){
+        console.warn(post);
+        notify({title:"Useful Message",items:[{title:post["title"],message:post["url"]}],buttons:[{title:"立马去看"}]},function(id){notifications[id] = post;});
+      });
     });
   }
   chrome.alarms.onAlarm.addListener(function(alarm){
     //console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
     window.setTimeout(process_coupon,0);
-    window.setTimeout(processs_lotteries,0);
+    window.setTimeout(process_lotteries,0);
     window.setTimeout(update_lotteries,30 * 1000);
+    window.setTimeout(watch_zuanke8,15 * 1000);
   });
   chrome.alarms.create("schedule", {
     when : 60 * 1000 - (now = new Date().getTime()) % 60000 + now ,

@@ -89,19 +89,19 @@ function refresh_conpon_list(){
 }
 
 function refresh_lottery_list(){
-  var hide_ignored = $("#lottery_hide_ignored").is(":checked"),
-    hide_expired = $("#lottery_hide_expired").is(":checked");
+  var show_ignored = $("#lottery_show_ignored").is(":checked"),
+    show_expired = $("#lottery_show_expired").is(":checked");
   $("#lottery_accordion").empty();
   chrome.storage.local.get(null,function(results){
     var counter = 0;
-    Object.keys(results).filter(function(key){return /^lottery\|/.test(key) && ( !!hide_ignored == !!results[key]["ignore"] ) && ( !!hide_expired != new Date(results[key]["endTime"]) >= new Date() ) }).forEach(function(key){
+    Object.keys(results).filter(function(key){return /^lottery\|/.test(key) && ( !!show_ignored == !!results[key]["ignore"] ) && ( !!show_expired != new Date(results[key]["endTime"]) >= new Date() ) }).forEach(function(key){
       //console.warn(key);
       var lottery = results[key];
       var wrapper_div = $(`<div class="card"></div>`);
       wrapper_div.data("lottery",lottery);
       var operation_wrapper_div = $(`<div class="input-group card-header" id="heading_${key.replace(/\W/g,"")}"></div>`);
       var lottery_a = $(`<div class="input-group-prepend"><a title="${key.replace(/\W/g,"")}" href="#" data-toggle="collapse" data-target="#collapse_${key.replace(/\W/g,"")}" aria-expanded="true" aria-controls="collapse_${key.replace(/\W/g,"")}" class="list-group-item list-group-item-action input-group-text">${"["+ ++counter + "]" + lottery.code}</a></div>`);
-      var datetimepicker = $(`<input type="text" class="form-control datetimepicker" />`).datetimepicker();
+      var datetimepicker = $(`<input type="text" class="form-control datetimepicker" />`).datetimepicker({datepicker : false,format:'H:i'});
       var add_schedule = $(`<button type="button" class="btn btn-primary" id="add_schedule">添加时间</button>`);
       var delete_lottery = $(`<button type="button" class="btn btn-primary" id="delete_lottery">删除抽奖</button>`);
       var test_lottery = $(`<button type="button" class="btn btn-primary" id="test_lottery">测试抽奖</button>`);
@@ -144,7 +144,7 @@ function refresh_lottery_list(){
           Object.keys(results).filter(function(key){return /^schedule\|lottery/.test(key)}).sort().forEach(function(schedule_key){                
             if(results[schedule_key][key]){
               let close_button = $(`<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>`),
-                time_point = $(`<div class="p-2 bg-primary bd-highlight text-white">${dateformat(new Date(schedule_key.match(/schedule\|lottery\|(\d+)/)[1]*1))}</div>`);
+                time_point = $(`<div class="p-2 bg-primary bd-highlight text-white">${schedule_key.match(/schedule\|lottery\|(\d{2})(\d{2})(\d{2})/).slice(1,4).join(':')}</div>`);
               time_point.append(close_button);
               close_button.click(function(){
                 chrome.storage.sync.get(schedule_key,function(result){
@@ -162,14 +162,14 @@ function refresh_lottery_list(){
       }
       add_schedule.click(function(){ 
         operation_wrapper_div.click();       
-        var time = Date.parse($(this).siblings(".datetimepicker").val());
+        var time = $(this).siblings(".datetimepicker").val();
         if(!time){
           return;
         }
+        time = time.replace(/:/g,"").concat("00");
         chrome.storage.sync.get("schedule|lottery|"+time,function(schedule){
-          var {code,act_key,act_url,time_range} = results[key];
           schedule = schedule["schedule|lottery|"+time] || {};
-          schedule[key] = {code,act_key,act_url,time_range};
+          schedule[key] = key;
           console.warn("schedule|lottery|"+time);
           chrome.storage.sync.set({["schedule|lottery|"+time] : schedule},function(){
             //timeline
@@ -191,10 +191,10 @@ $(function(){
   $("#end_date").datetimepicker();
   refresh_conpon_list();
   refresh_lottery_list();
-  $("#lottery_hide_ignored").change(function(){
+  $("#lottery_show_ignored").change(function(){
     refresh_lottery_list();
   });
-  $("#lottery_hide_expired").change(function(){
+  $("#lottery_show_expired").change(function(){
     refresh_lottery_list();
   });
   $("#add_coupon").click(function(){
@@ -254,22 +254,21 @@ $(function(){
     window.open("https://sale.jd.com/act/" + $("#lottery_act_key").val().trim() + ".html");    
   });
   $("#download_lottery_storage").click(async function(){
-    var hide_ignored = $("#lottery_hide_ignored").is(":checked"),
-    hide_expired = $("#lottery_hide_expired").is(":checked");
-    chrome.storage.local.get(null,function(results){
-      console.warn(results);
-      var list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !!hide_ignored == !!results[key]["ignore"] ) && ( !!hide_expired != new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return {code:results[key]["code"],act_url:"https://sale.jd.com/act/" + results[key]["act_key"] + ".html"}});//Object.values(results);
+    var show_ignored = $("#lottery_show_ignored").is(":checked"),
+    show_expired = $("#lottery_show_expired").is(":checked");
+    chrome.storage.local.get(null,function(results){      
+      var list = Object.keys(results).filter(function(key){return /^lottery\|/.test(key) && ( !!show_ignored == !!results[key]["ignore"] ) && ( !!show_expired == new Date(results[key]["endTime"]) < new Date() )}).map(function(key){return {code:results[key]["code"],act_url:"https://sale.jd.com/act/" + results[key]["act_key"] + ".html"}});//Object.values(results);
+      console.warn(list);
       var csv = CSV.encode(list, { header: true });
       var file = new File([csv], "lottery_from_storage.csv", {type: "text/csv;charset=utf-8"});
       saveAs(file);
     });
   });
   $("#download_raw_lottery_storage").click(async function(){
-    var hide_ignored = $("#lottery_hide_ignored").is(":checked"),
-    hide_expired = $("#lottery_hide_expired").is(":checked");
+    var show_ignored = $("#lottery_show_ignored").is(":checked"),
+    show_expired = $("#lottery_show_expired").is(":checked");
     chrome.storage.local.get(null,function(results){
-      console.warn(results);
-      var list = Object.keys(results).filter(function(key){return /lottery\|/.test(key) && ( !!hide_ignored == !!results[key]["ignore"] ) && ( !!hide_expired != new Date(results[key]["endTime"]) >= new Date() )}).map(function(key){return results[key]});//Object.values(results);
+      var list = Object.keys(results).filter(function(key){return /^lottery\|/.test(key) && ( !!show_ignored == !!results[key]["ignore"] ) && ( !!show_expired == new Date(results[key]["endTime"]) < new Date() )}).map(function(key){return results[key]});//Object.values(results);
       //var csv = CSV.encode(list, { header: true });
       var file = new File([JSON.stringify(list)], "raw_lottery_from_storage.txt", {type: "text/csv;charset=utf-8"});
       saveAs(file);

@@ -197,7 +197,8 @@ function draw(lottery_code){
             window.postMessage({"to":"background","work":"report_draw_result","info":result}, '*');
           }
           if(result["data"]["chances"]>0){
-            draw(lottery_code);
+            //draw(lottery_code);
+            window.postMessage({"to":"background","work":"report_draw_result","info":result}, '*');
           }else{
             window.postMessage({"to":"background","work":"report_draw_result",result}, '*');
           }
