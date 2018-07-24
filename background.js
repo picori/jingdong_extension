@@ -13,7 +13,7 @@ var notifications = {};
 // 
 var db = new Dexie("MyDatabase");
 db.version(1).stores({
-    coupon: "&key,startTime,endTime,&id,priority",
+    posts: "&id,postTime,priority,notify_times",
     coupon_collection: "&key,startTime,endTime,&id,priority"
 
 
@@ -839,16 +839,17 @@ function monitor_lottery(){
 
   function watch_zuanke8(){
     $.ajax({url:"http://www.zuanke8.com/forum.php?mod=forumdisplay&fid=15&page=1&filter=lastpost&orderby=lastpost",cache:false,type:"html"}).then(function(html){
-      var posts = html.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>/g);
-      //console.warn(posts);
+      var posts = html.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>(?:[\s\n\r]+\- \[阅读权限 <span class="xw1">(\d+)<\/span>\])?/g);
+      console.warn(posts);
       posts.map(function(post){
-        post = post.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>/);
-        return {url:post[1].replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&'),title:post[2]};
+        post = post.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>(?:[\s\n\r]+\- \[阅读权限 <span class="xw1">(\d+)<\/span>\])?/);
+        return {url:post[1].replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&'),title:post[2],priority:post[3]||0};
       }).filter(function(post){
-        return post["title"].match(/vx|微信|大水|秒推|话费/);
+        return post["title"].match(/(?:v|w)x|公众号|关注|大水|秒推|话费|速度|红包|抽奖|bug|速撸|水了/i);
       }).forEach(function(post){
         console.warn(post);
-        notify({title:"Useful Message",items:[{title:post["title"],message:post["url"]}],buttons:[{title:"立马去看"}]},function(id){notifications[id] = post;});
+        //chrome.storage.local.get(`zuanke8|post|`,function(items){
+        notify({title:"Useful Message",items:[{title:`[${post["priority"]}]`,message:post["title"]}],buttons:[{title:"立马去看"}]},function(id){notifications[id] = post;});
       });
     });
   }
