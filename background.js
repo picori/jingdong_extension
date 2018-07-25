@@ -683,7 +683,7 @@ chrome.notifications.onClicked.addListener(function(id){
 
 chrome.notifications.onButtonClicked.addListener(function(id){
   if(notifications[id]["title"]){
-    ignore_posts[notifications[id]] = true;
+    ignore_posts[notifications[id]["id"]] = true;
   }
   window.focus();
   chrome.notifications.clear(id, function() {});
