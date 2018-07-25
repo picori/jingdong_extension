@@ -365,7 +365,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       if((water_winner_list = winner_list.filter(function(winner){return !winner["prizeName"].match(/券/) && new Date(winner["winDate"]) > new Date() - 60 * 2 * 1000 })).length >= 1){
         console.warn(`${lottery["code"]} has water`,water_winner_list);
         let messages = water_winner_list.map(function(winner){return {title:winner["winDate"],message:winner["prizeName"]}});
-        notify({title:lottery["code"],items:messages,buttons:[{title:"立马去抽"}]},function(id){notifications[id] = lottery;});
+        notify({title:lottery["code"],items:messages,buttons:[{title:"忽略信息"}]},function(id){notifications[id] = lottery;});
         //drawLottery(lottery["lottery_code"]);
         monitorLottery();
       }else{
