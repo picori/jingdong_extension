@@ -9,6 +9,7 @@
 
 
 var notifications = {};
+var ignore_posts = {};
 
 // 
 var db = new Dexie("MyDatabase");
@@ -670,7 +671,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
   }
 });  
 
-chrome.notifications.onButtonClicked.addListener(function(id){
+chrome.notifications.onClicked.addListener(function(id){
   if(notifications[id]["title"]){
     window.open(notifications[id]["url"]);
   }else{
@@ -680,8 +681,16 @@ chrome.notifications.onButtonClicked.addListener(function(id){
   chrome.notifications.clear(id, function() {});
 });
 
+chrome.notifications.onButtonClicked.addListener(function(id){
+  if(notifications[id]["title"]){
+    ignore_posts[notifications[id]] = true;
+  }
+  window.focus();
+  chrome.notifications.clear(id, function() {});
+});
+
 chrome.notifications.onClosed.addListener(function(id){
-  //delete notifications[id];
+  delete notifications[id];
 });
 
 // function schedule(){  
@@ -840,16 +849,21 @@ function monitor_lottery(){
   function watch_zuanke8(){
     $.ajax({url:"http://www.zuanke8.com/forum.php?mod=forumdisplay&fid=15&page=1&filter=lastpost&orderby=lastpost",cache:false,type:"html"}).then(function(html){
       var posts = html.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>(?:[\s\n\r]+\- \[阅读权限 <span class="xw1">(\d+)<\/span>\])?/g);
-      console.warn(posts);
+      //console.warn(posts);
       posts.map(function(post){
         post = post.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>(?:[\s\n\r]+\- \[阅读权限 <span class="xw1">(\d+)<\/span>\])?/);
-        return {url:post[1].replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&'),title:post[2],priority:post[3]||0};
+        var url = post[1].replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
+        var id = url.match(/tid=(\d+)/)[1];
+        return {id:id,url,title:post[2],priority:post[3]||0};
       }).filter(function(post){
-        return post["title"].match(/(?:v|w)x|公众号|关注|大水|秒推|话费|速度|红包|抽奖|bug|速撸|水了/i);
+        return /(?:v|w)x|公众号|关注|大水|秒推|话费|速度|红包|抽奖|bug|速撸|水了/i.test(post["title"]) &&
+              !/wj|\d+秒|万家|fx|斐讯|白条|\?|\？|哪/i.test(post["title"]);
       }).forEach(function(post){
         console.warn(post);
         //chrome.storage.local.get(`zuanke8|post|`,function(items){
-        notify({title:"Useful Message",items:[{title:`[${post["priority"]}]`,message:post["title"]}],buttons:[{title:"立马去看"}]},function(id){notifications[id] = post;});
+        if(!ignore_posts[post["id"]]){
+          notify({title:"Useful Message",items:[{title:`[${post["priority"]}]`,message:post["title"]}],buttons:[{title:"忽略信息"}]},function(id){notifications[id] = post;});
+        }        
       });
     });
   }
