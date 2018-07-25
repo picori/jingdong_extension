@@ -857,7 +857,7 @@ function monitor_lottery(){
         return {id:id,url,title:post[2],priority:post[3]||0};
       }).filter(function(post){
         return /(?:v|w)x|公众号|关注|大水|秒推|话费|速度|红包|抽奖|bug|速撸|水了/i.test(post["title"]) &&
-              !/wj|\d+秒|万家|fx|斐讯|白条|\?|\？|哪/i.test(post["title"]);
+              !/wj|\d+秒|万家|fx|斐讯|白条|\?|\？|哪|吗/i.test(post["title"]);
       }).forEach(function(post){
         console.warn(post);
         //chrome.storage.local.get(`zuanke8|post|`,function(items){
