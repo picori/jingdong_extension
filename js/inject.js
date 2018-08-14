@@ -190,7 +190,7 @@ function monitorLottery(lottery_code){
 function draw(lottery_code){
   setTimeout(function(){
     $.ajax({url:`https://l-activity.jd.com/lottery/lottery_start.action?lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
-      console.warn(result);
+      console.warn(new Date(),result);
       if(result){
         try{
           if(result["data"]["winner"]){
