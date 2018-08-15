@@ -801,13 +801,14 @@ function monitor_lottery(){
               }else if(lottery["ignore"]){
                 //
               }else{
-                console.warn(dateformat(),lottery,"is preparing!");
+                console.warn(key,dateformat(),lottery,"is preparing!");
                 setTimeout(function(){
                   chrome.tabs.query({index:0}, function(tabs){
                     chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"draw_lottery","info":lottery}, function(response){
                     });                
                   });
-                },60 * 1000 + lottery["time_range"] * Math.random());
+                  console.warn(key,dateformat(),lottery,"is working!");
+                },60 * 1000 + (lottery["time_range"] || 0) * Math.random());
               }
             }else{
               //delete items[key][lottery];        
