@@ -183,7 +183,7 @@ function get_lottery_info(lottery_code){
 function monitorLottery(lottery_code){
   $.ajax({url:`https://ls-activity.jd.com/lotteryApi/getWinnerList.action?lotteryCode=${lottery_code}`,cache:false,dataType:"jsonp"}).then(function(result){
     var lottery = {lottery_code,winner_list:result["data"]};
-    console.warn(lottery);
+    //console.warn(lottery);
     window.postMessage({"to":"background","work":"update_lottery_winner_list","info":lottery}, '*');
   });
 }
