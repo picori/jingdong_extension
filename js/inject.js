@@ -14,6 +14,8 @@ window.addEventListener("message", function(e){
       get_all_coupons();
     }else if(message.work === "clear_useless_coupon"){
       clear_useless_coupon();
+    }else if(message.work === "ajax_coupon"){
+      ajax_coupon(message.info.coupon,message.info.next_minute);
     }else if(message.work == "draw_lottery"){
       draw_lottery(message.info.code);
     }else if(message.work == "monitor_lottery"){
@@ -134,6 +136,38 @@ function clear_useless_coupon(){
     console.warn(useable);    
     delete_coupon();        
   });
+}
+
+function _ajax_coupon(coupon,next_minute){
+  window["jsonpCBKA"] = window["jsonpCBKA"] || function (result){
+    return result;
+  }
+  var now = new Date().getTime();
+  coupon["ajax"]["cache"] = false;
+  $.ajax(coupon["ajax"]).done(function(result){
+    //console.warn(now,coupon,result);
+    try{
+      result = eval(result);
+    }catch(e){
+      if(coupon.is_jinrong){
+        result = result.match(/<p class="J_prizeIntro">([^<]+)<\/p>/m);
+        result = result && result[1];
+      }else{
+        result = result.match(/<h1 class="ctxt02"><s class="icon-redbag"><\/s>([^<]+)<\/h1>/m);
+        result = result && result[1];
+      }      
+    }    
+    console.warn(now,coupon,result);
+    if( next_minute && (now - next_minute <= 1000) && (result.ret != 999) ){
+      setTimeout(function(){_ajax_coupon(coupon,next_minute)},coupon.interval || (Math.random() * 100 + 150) );
+    }else{
+      window.postMessage({"to":"background","work":"ajax_coupon","result":result},'*');
+    }
+  });
+}
+
+function ajax_coupon(coupon,next_minute){
+  setTimeout(function(){_ajax_coupon(coupon,next_minute)},new Date().getTime() - next_minute );
 }
 
 (function (){

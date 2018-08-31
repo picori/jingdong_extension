@@ -36,6 +36,11 @@ if(window.location.href.match(/https?:\/\/sale\.jd\.(com|hk)\/act/)){
   injectCustomJs('js/lottery.js');
 }
 
+if(window.location.href.match(/https?:\/\/s\.m\.jd\.(com|hk)/)) {
+  injectCustomJs('js/jquery-3.3.1.min.js');
+  injectCustomJs('js/inject.js');
+}
+
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
 {

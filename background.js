@@ -62,6 +62,23 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   }, {urls:["*://a.jd.com/*"]},
   ["blocking","requestHeaders"]);
 
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function (details){
+    console.warn(details);
+    details.requestHeaders.forEach(function(header){
+      if(header.name == "Referer"){
+        var key = details.url.match(/key=([^&]*)(:?&|$)/)[1];
+        var roleId = details.url.match(/roleId=([^&]*)(:?&|$)/)[1];
+        header.value = `https://coupon.m.jd.com/coupons/show.action?key=${key}&roleId=${roleId}&to=`;
+        console.warn(header.value);
+      }else if (header.name == "Origin"){
+        header.value = "https://s.m.jd.com";
+      }
+    }) //push({name:"Access-Control-Allow-Origin",value:"*"});
+    return {requestHeaders:details.requestHeaders}
+  }, {urls:["*://s.m.jd.com/activemcenter/mfreecoupon/getcoupon*"]},
+  ["blocking","requestHeaders"]);
+
 // chrome.webRequest.onBeforeSendHeaders.addListener(
 //   function (details){
 //     return {cancel:true};
@@ -667,6 +684,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
       updateLotteryWinnerList(request["info"]);
     }else if(request["work"] == "notify"){
       notify({title:"Lottery draw result!",items:[{title:"msg",message:JSON.stringify(request["info"])}]});
+    }else if(request["work"] == "ajax_coupon"){
+      notify({title:"Coupon draw result!",items:[{title:"msg",message:JSON.stringify(request["result"])}]});
     }
   }
 });  
@@ -716,23 +735,32 @@ function monitor_lottery(){
   var lottery = lotteries.shift();
   if(lottery){
     //console.warn(lottery);
-    chrome.tabs.query({index:0}, function(tabs){
+    chrome.tabs.query({index:1}, function(tabs){
       //console.warn(tabs);
-      chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"monitor_lottery","info":lottery}, function(response){
+      chrome.tabs.sendMessage(tabs[1].id, {"to":"inject","from":"background","work":"monitor_lottery","info":lottery}, function(response){
           //if(callback) callback(response);
       });
     });
   }
+}
+function ajax_coupon(coupon,next_minute){
+  //console.warn("monitor_lottery",lotteries);
+  chrome.tabs.query({index:0}, function(tabs){
+    //console.warn(tabs);
+    chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"ajax_coupon","info":{coupon,next_minute}}, function(response){
+        //if(callback) callback(response);
+    });
+  });
 }
 
 (function schedule(){
   var now;
   var timers = {};
   function fetchTab(callback){
-    chrome.tabs.query({index:1}, function (tabs){
+    chrome.tabs.query({index:2}, function (tabs){
       if(tabs.length == 0){
         console.warn("Create new tab");
-        chrome.tabs.create({index:1},function(tab){
+        chrome.tabs.create({index:2},function(tab){
           console.warn("New tab is created");
           callback(tab);
         });
@@ -756,13 +784,18 @@ function monitor_lottery(){
         var coupons = Object.values(items[key]);
         var offset; 
         coupons.forEach(function(coupon){
-          setTimeout(function(){
-            if(coupon["script"]){
-              eval(coupon["script"]);
-            }else if(coupon["ajax"]){
-              ajax(coupon,next_minute);
-            } 
-          },60 * 1000 - 1500);
+          // setTimeout(function(){
+          //   if(coupon["script"]){
+          //     eval(coupon["script"]);
+          //   }else if(coupon["ajax"]){
+          //     ajax(coupon,next_minute);
+          //   } 
+          // },60 * 1000 - 1500);
+          if(coupon["script"]){
+            eval(coupon["script"]);
+          }else if(coupon["ajax"]){
+            ajax_coupon(coupon,next_minute);
+          }
         });
       });
     });
