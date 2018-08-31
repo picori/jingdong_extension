@@ -737,7 +737,7 @@ function monitor_lottery(){
     //console.warn(lottery);
     chrome.tabs.query({index:1}, function(tabs){
       //console.warn(tabs);
-      chrome.tabs.sendMessage(tabs[1].id, {"to":"inject","from":"background","work":"monitor_lottery","info":lottery}, function(response){
+      chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"monitor_lottery","info":lottery}, function(response){
           //if(callback) callback(response);
       });
     });
