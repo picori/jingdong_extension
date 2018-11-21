@@ -167,7 +167,7 @@ function _ajax_coupon(coupon,next_minute){
 }
 
 function ajax_coupon(coupon,next_minute){
-  setTimeout(function(){_ajax_coupon(coupon,next_minute)},new Date().getTime() - next_minute );
+  setTimeout(function(){_ajax_coupon(coupon,next_minute)},next_minute - new Date().getTime() );
 }
 
 (function (){

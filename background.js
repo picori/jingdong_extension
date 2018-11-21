@@ -773,7 +773,7 @@ function ajax_coupon(coupon,next_minute){
   function process_coupon(){
     chrome.storage.sync.get(null,function(items){
       var now = new Date().getTime();
-      var next_minute = now - now % (60 * 1000) + 60 * 1000;
+      var next_minute = now - now % (60 * 1000) + 60 * 1000 - 600;
       var schedules = Object.keys(items).filter(function(key){return key.match(/^schedule(\d+)/) && RegExp.$1 < next_minute; }).forEach(function(key){
         console.warn(key + " is removed!",schedules);
         chrome.storage.sync.remove(key);
@@ -836,7 +836,7 @@ function ajax_coupon(coupon,next_minute){
               }else{
                 console.warn(key,dateformat(),lottery,"is preparing!");
                 setTimeout(function(){
-                  chrome.tabs.query({index:0}, function(tabs){
+                  chrome.tabs.query({index:1}, function(tabs){
                     chrome.tabs.sendMessage(tabs[0].id, {"to":"inject","from":"background","work":"draw_lottery","info":lottery}, function(response){
                     });                
                   });
@@ -881,6 +881,7 @@ function ajax_coupon(coupon,next_minute){
   }
 
   function watch_zuanke8(){
+    //return;
     $.ajax({url:"http://www.zuanke8.com/forum.php?mod=forumdisplay&fid=15&page=1&filter=lastpost&orderby=lastpost",cache:false,type:"html"}).then(function(html){
       var posts = html.match(/<a href="([^"]+)"  class="s xst" target="_blank">([^<]+)<\/a>(?:[\s\n\r]+\- \[阅读权限 <span class="xw1">(\d+)<\/span>\])?/g);
       //console.warn(posts);
@@ -890,7 +891,7 @@ function ajax_coupon(coupon,next_minute){
         var id = url.match(/tid=(\d+)/)[1];
         return {id:id,url,title:post[2],priority:post[3]||0};
       }).filter(function(post){
-        return /(?:v|w)x|公众号|关注|大水|秒推|话费|速度|红包|抽奖|bug|速撸|水了|京豆|神券/i.test(post["title"]) &&
+        return (/(?:v|w)x|大水|话费|速度|红包|抽奖|bug|速撸|水了|京豆|神券|玩客|掌上|融e购|有水|放水|！|小浦|快|券/i.test(post["title"]) || post[3]) &&
               !/wj|\d+秒|万家|fx|斐讯|白条|\?|\？|哪/i.test(post["title"]);
       }).forEach(function(post){
         console.warn(post);
@@ -901,6 +902,7 @@ function ajax_coupon(coupon,next_minute){
       });
     });
   }
+
   chrome.alarms.onAlarm.addListener(function(alarm){
     //console.warn(new Date().getTime(),"onAlarm:\t" + alarm.name);
     window.setTimeout(process_coupon,0);
